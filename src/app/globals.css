@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  ::selection {
+    background-color: theme("colors.hanko.DEFAULT");
+    color: theme("colors.washi.DEFAULT");
+  }
+  :focus-visible {
+    outline: 2px solid theme("colors.hanko.DEFAULT");
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* Tampon hanko (印) — signature visuelle apposée à chaque bonne réponse */
+  .hanko-stamp {
+    @apply relative inline-flex items-center justify-center;
+    width: 88px;
+    height: 88px;
+    border: 3px solid theme("colors.hanko.DEFAULT");
+    border-radius: 9999px;
+    color: theme("colors.hanko.DEFAULT");
+    background: transparent;
+    transform: rotate(-8deg);
+    animation: stamp 0.45s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+  }
+  .hanko-stamp::before {
+    content: "";
+    position: absolute;
+    inset: 6px;
+    border: 1px solid theme("colors.hanko.DEFAULT");
+    border-radius: 9999px;
+    opacity: 0.6;
+  }
+
+  .card-washi {
+    @apply bg-white/60 dark:bg-white/5 border border-sumi/10 dark:border-washi/10 rounded-2xl shadow-sm;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-ai text-washi font-body font-medium px-6 py-3 transition-colors hover:bg-ai-light active:bg-ai-dark disabled:opacity-40 disabled:pointer-events-none;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-sumi/20 dark:border-washi/20 text-sumi dark:text-washi font-body font-medium px-6 py-3 transition-colors hover:bg-sumi/5 dark:hover:bg-washi/5;
+  }
+}
