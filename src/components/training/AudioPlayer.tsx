@@ -1,18 +1,46 @@
 "use client";
 
-import { useState } from "react";
-import { speakJapanese } from "@/lib/tts";
+import { useEffect, useState } from "react";
+import { speakJapanese, ensureVoicesLoaded } from "@/lib/tts";
 import type { VoicePref } from "@/types/database";
 
 export default function AudioPlayer({
   text,
   voicePreference = "female",
+  autoPlay = false,
 }: {
   text: string;
   voicePreference?: VoicePref;
+  autoPlay?: boolean;
 }) {
   const [playing, setPlaying] = useState(false);
   const [unsupported, setUnsupported] = useState(false);
+
+  // Précharge la liste des voix dès l'affichage du composant : sur Chrome/Edge, cette
+  // liste se charge de façon asynchrone après le chargement de la page, et un premier
+  // clic trop rapide sur "Écouter" peut se retrouver sans voix japonaise disponible.
+  useEffect(() => {
+    ensureVoicesLoaded();
+  }, []);
+
+  // Lecture automatique à chaque changement de texte (nouvelle question).
+  useEffect(() => {
+    if (!autoPlay || !text) return;
+    let cancelled = false;
+    setPlaying(true);
+    speakJapanese(text, voicePreference)
+      .catch(() => {
+        if (!cancelled) setUnsupported(true);
+      })
+      .finally(() => {
+        if (!cancelled) setPlaying(false);
+      });
+    return () => {
+      cancelled = true;
+      window.speechSynthesis?.cancel();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoPlay, text]);
 
   async function handlePlay() {
     setPlaying(true);

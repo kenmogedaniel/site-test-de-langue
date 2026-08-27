@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import PasswordField from "@/components/ui/PasswordField";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -47,20 +48,13 @@ export default function LoginForm() {
           required
         />
       </div>
-      <div>
-        <label htmlFor="password" className="block text-sm mb-2 text-sumi/70 dark:text-washi/70">
-          Mot de passe
-        </label>
-        <input
-          id="password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          autoComplete="current-password"
-          className="w-full rounded-xl border border-sumi/15 dark:border-washi/15 bg-transparent px-4 py-3 outline-none focus:border-ai"
-          required
-        />
-      </div>
+      <PasswordField
+        id="password"
+        label="Mot de passe"
+        value={password}
+        onChange={setPassword}
+        autoComplete="current-password"
+      />
 
       {error && (
         <p role="alert" className="text-sm text-hanko">

@@ -38,6 +38,21 @@ Le fichier `.env.local` est déjà rempli avec les clés de votre projet Supabas
   RLS Supabase (chacun ne voit que ses propres données), vérification d'auth
   systématique côté serveur, aucune clé secrète exposée côté client.
 
+## Correction intelligente par IA (recommandé)
+
+Les modes Moyen et Difficile utilisent l'API Anthropic (Claude) pour juger le **sens réel**
+de la réponse de l'étudiant plutôt que sa ressemblance à un texte de référence figé — une
+question ouverte a un nombre quasi infini de bonnes réponses possibles, une comparaison
+mécanique ne peut pas toutes les accepter. C'est aussi cette IA qui convertit les réponses
+orales (micro) en hiragana pur, puisque la reconnaissance vocale du navigateur transcrit
+toujours en kanji standard.
+
+**Pour l'activer** : créez une clé sur https://console.anthropic.com/settings/keys et
+mettez-la dans `ANTHROPIC_API_KEY` de votre `.env.local`. Sans cette clé, l'application
+fonctionne quand même (elle se rabat automatiquement sur une correction algorithmique
+locale, plus rigide) mais la qualité de la correction en modes Moyen/Difficile sera
+nettement inférieure, et les réponses orales resteront en kanji plutôt qu'en hiragana.
+
 ## Brancher un vrai moteur de synthèse vocale (optionnel)
 
 Par défaut, l'app utilise `window.speechSynthesis` (Web Speech API), qui

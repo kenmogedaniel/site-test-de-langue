@@ -1,9 +1,12 @@
+import { kanjiToHiraganaApprox } from "./kanjiDictionary";
+
 /**
- * Normalise un texte japonais pour la comparaison :
- * enlève les espaces, la ponctuation courante, met en forme uniforme.
+ * Normalise un texte japonais pour la comparaison : convertit les kanji connus
+ * en hiragana (un utilisateur tape naturellement en kanji, nos réponses de
+ * référence sont en hiragana pur), enlève les espaces et la ponctuation.
  */
 function normalize(text: string): string {
-  return text
+  return kanjiToHiraganaApprox(text)
     .trim()
     .replace(/[。、！？\s　]/g, "")
     .replace(/[!?.,]/g, "")
@@ -31,10 +34,42 @@ function levenshtein(a: string, b: string): number {
 }
 
 /** Similarité entre 0 et 1 (1 = identique) basée sur la distance de Levenshtein normalisée. */
-function similarity(a: string, b: string): number {
+function charSimilarity(a: string, b: string): number {
   const maxLen = Math.max(a.length, b.length);
   if (maxLen === 0) return 1;
   return 1 - levenshtein(a, b) / maxLen;
+}
+
+/**
+ * Extrait les "mots de contenu" d'une phrase japonaise en la découpant sur les
+ * particules grammaticales courantes. Approximatif (pas de vraie tokenisation
+ * morphologique) mais suffisant pour mesurer un recouvrement de sens.
+ */
+function extractContentWords(text: string): string[] {
+  return Array.from(
+    new Set(
+      kanjiToHiraganaApprox(text)
+        .replace(/[。、！？]/g, " ")
+        .split(/[はがをにでともへからまでやも]/)
+        .map((w) => w.trim())
+        .filter((w) => w.length >= 2)
+    )
+  );
+}
+
+/** Recouvrement de mots de contenu entre la réponse utilisateur et une réponse candidate (0 à 1). */
+function keywordOverlap(userWords: string[], candidateWords: string[]): number {
+  if (candidateWords.length === 0) return 0;
+  const matched = candidateWords.filter((w) => userWords.some((uw) => uw.includes(w) || w.includes(uw)));
+  return matched.length / candidateWords.length;
+}
+
+/** Détecte une polarité oui/non explicite en début de réponse. */
+function detectPolarity(text: string): "yes" | "no" | null {
+  const t = text.trim();
+  if (/^(はい|うん|ええ)/.test(t)) return "yes";
+  if (/^(いいえ|いや|ううん)/.test(t)) return "no";
+  return null;
 }
 
 export interface MatchResult {
@@ -44,22 +79,38 @@ export interface MatchResult {
 }
 
 /**
- * Mode Moyen : compare la réponse libre de l'utilisateur à la réponse modèle
- * et à ses variantes acceptables, avec une tolérance à la casse/ponctuation/légères fautes.
+ * Mode Moyen : compare la réponse libre de l'utilisateur à la réponse modèle et à
+ * ses variantes acceptables. Combine une similarité au niveau caractère (tolère les
+ * petites fautes) et un recouvrement de mots de contenu (tolère une formulation
+ * différente pourvu que le sens et les mots-clés attendus soient présents), avec
+ * un bonus si la polarité oui/non correspond. Les kanji sont normalisés en hiragana
+ * avant comparaison pour ne pas pénaliser une écriture standard (ex: 楽しい = たのしい).
  */
 export function matchMediumAnswer(
   userAnswer: string,
   modelKana: string,
   acceptableVariants: string[],
-  threshold = 0.6
+  threshold = 0.5
 ): MatchResult {
   const candidates = [modelKana, ...acceptableVariants];
   const normalizedUser = normalize(userAnswer);
+  const userWords = extractContentWords(userAnswer);
+  const userPolarity = detectPolarity(userAnswer);
 
   let best = { text: modelKana, score: 0 };
   for (const candidate of candidates) {
-    const sim = similarity(normalizedUser, normalize(candidate));
-    if (sim > best.score) best = { text: candidate, score: sim };
+    const charScore = charSimilarity(normalizedUser, normalize(candidate));
+    const wordScore = keywordOverlap(userWords, extractContentWords(candidate));
+    let combined = Math.max(charScore, wordScore);
+
+    const candidatePolarity = detectPolarity(candidate);
+    if (candidatePolarity && userPolarity && candidatePolarity === userPolarity) {
+      combined = Math.min(1, combined + 0.25);
+    } else if (candidatePolarity && userPolarity && candidatePolarity !== userPolarity) {
+      combined = Math.max(0, combined - 0.3);
+    }
+
+    if (combined > best.score) best = { text: candidate, score: combined };
   }
 
   return {
@@ -97,26 +148,19 @@ export function evaluateAdvancedAnswer(
     score += 30;
   }
 
-  // 2. Présence de mots-clés significatifs extraits de la réponse modèle (hiragana/kanji de contenu, mots > 1 caractère).
-  const modelKeywords = Array.from(
-    new Set(
-      modelKana
-        .replace(/[。、！？]/g, " ")
-        .split(/[はがをにでともへからまでや]/)
-        .map((w) => w.trim())
-        .filter((w) => w.length >= 2)
-    )
-  );
-  const matchedKeywords = modelKeywords.filter((kw) => trimmed.includes(kw));
+  // 2. Présence de mots-clés significatifs extraits de la réponse modèle.
+  const modelKeywords = extractContentWords(modelKana);
+  const userWords = extractContentWords(trimmed);
+  const matchedKeywords = modelKeywords.filter((kw) => userWords.some((uw) => uw.includes(kw) || kw.includes(uw)));
   const keywordRatio = modelKeywords.length > 0 ? matchedKeywords.length / modelKeywords.length : 0;
   score += Math.round(keywordRatio * 40);
 
-  if (keywordRatio < 0.3) {
+  if (keywordRatio < 0.25) {
     feedback.push("Votre réponse s'éloigne beaucoup du sujet attendu. Relisez la question et essayez de répondre plus directement.");
   }
 
   // 3. Structure : présence d'une justification (どうして/から/ので indique un raisonnement).
-  const hasReasoning = /(から|ので|とおもいます|たいです)/.test(trimmed);
+  const hasReasoning = /(から|ので|とおもいます|たいです)/.test(kanjiToHiraganaApprox(trimmed));
   if (hasReasoning) {
     score += 30;
   } else {
@@ -125,9 +169,9 @@ export function evaluateAdvancedAnswer(
 
   score = Math.min(100, score);
 
-  if (score >= 70) {
+  if (score >= 65) {
     feedback.unshift("Bonne réponse, bien structurée.");
-  } else if (score >= 40) {
+  } else if (score >= 35) {
     feedback.unshift("Réponse correcte dans l'idée, mais peut être améliorée.");
   } else {
     feedback.unshift("Réponse à retravailler.");
@@ -137,5 +181,5 @@ export function evaluateAdvancedAnswer(
     feedback.push(`Exemple de réponse modèle : ${modelKana} (${modelFr})`);
   }
 
-  return { score, isCorrect: score >= 60, feedback };
+  return { score, isCorrect: score >= 55, feedback };
 }

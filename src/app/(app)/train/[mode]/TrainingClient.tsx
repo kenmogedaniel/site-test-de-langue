@@ -1,15 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import AudioPlayer from "@/components/training/AudioPlayer";
 import HankoFeedback from "@/components/training/HankoFeedback";
+import { useSpeechRecognition } from "@/lib/useSpeechRecognition";
 import type { Difficulty, VoicePref } from "@/types/database";
 
 interface QuestionData {
   id: string;
   text_kana: string;
+  text_fr: string | null;
   themeName: string;
   options: { id: string; text_kana: string }[];
 }
@@ -20,16 +22,26 @@ const MODE_LABELS: Record<Difficulty, string> = {
   hard: "Difficile — réponse structurée",
 };
 
+const TIMER_SECONDS = 30;
+
 export default function TrainingClient({
   mode,
+  timed,
   sessionId,
   voicePreference,
   questions,
+  totalQuestionCount,
+  answeredCount,
+  priorCorrect,
 }: {
   mode: Difficulty;
+  timed: boolean;
   sessionId: string;
   voicePreference: VoicePref;
   questions: QuestionData[];
+  totalQuestionCount: number;
+  answeredCount: number;
+  priorCorrect: number;
 }) {
   const router = useRouter();
   const [index, setIndex] = useState(0);
@@ -42,48 +54,109 @@ export default function TrainingClient({
     feedbackDetails?: string[] | null;
   } | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [abandoning, setAbandoning] = useState(false);
   const [flagged, setFlagged] = useState(false);
-  const [tally, setTally] = useState({ correct: 0, total: 0 });
+  const [showHelp, setShowHelp] = useState(false);
+  const [tally, setTally] = useState({ correct: priorCorrect, total: answeredCount });
+  const [secondsLeft, setSecondsLeft] = useState(TIMER_SECONDS);
+  const [convertingSpeech, setConvertingSpeech] = useState(false);
+
+  const speech = useSpeechRecognition(async (rawTranscript) => {
+    // La reconnaissance vocale du navigateur transcrit toujours en kanji standard ;
+    // on convertit en hiragana pur avant de remplir le champ de réponse.
+    setConvertingSpeech(true);
+    try {
+      const res = await fetch("/api/speech/to-hiragana", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: rawTranscript }),
+      });
+      const data = await res.json();
+      setFreeText(res.ok && data.hiragana ? data.hiragana : rawTranscript);
+    } catch {
+      setFreeText(rawTranscript);
+    } finally {
+      setConvertingSpeech(false);
+    }
+  });
+
+  // Tant que le micro écoute, on reflète le transcript brut en direct (conversion en
+  // hiragana appliquée une fois l'écoute terminée, voir le callback ci-dessus).
+  useEffect(() => {
+    if (speech.isListening) setFreeText(speech.transcript);
+  }, [speech.transcript, speech.isListening]);
 
   const current = questions[index];
-  const progressPct = useMemo(() => Math.round((index / questions.length) * 100), [index, questions.length]);
+  const overallDone = answeredCount + index;
+  const progressPct = useMemo(
+    () => Math.round((overallDone / totalQuestionCount) * 100),
+    [overallDone, totalQuestionCount]
+  );
 
-  async function handleSubmit() {
-    if (submitting) return;
-    setSubmitting(true);
+  // handleSubmit doit être stable pour être appelée depuis le timer sans le relancer en boucle.
+  const submitRef = useRef<(timedOut?: boolean) => void>(() => {});
 
-    const payload: Record<string, unknown> = {
-      sessionId,
-      questionId: current.id,
-      mode,
-    };
-    if (mode === "easy") {
-      if (!selectedOptionId) {
-        setSubmitting(false);
-        return;
+  const handleSubmit = useCallback(
+    async (timedOut = false) => {
+      if (submitting || result) return;
+      if (!timedOut) {
+        if (mode === "easy" && !selectedOptionId) return;
+        if (mode !== "easy" && !freeText.trim()) return;
       }
-      payload.selectedOptionId = selectedOptionId;
-    } else {
-      if (!freeText.trim()) {
-        setSubmitting(false);
-        return;
+      setSubmitting(true);
+
+      const payload: Record<string, unknown> = { sessionId, questionId: current.id, mode };
+      if (timedOut) {
+        payload.timedOut = true;
+      } else if (mode === "easy") {
+        payload.selectedOptionId = selectedOptionId;
+      } else {
+        payload.userAnswer = freeText;
       }
-      payload.userAnswer = freeText;
-    }
 
-    const res = await fetch("/api/sessions/answers", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = await res.json();
-    setSubmitting(false);
+      const res = await fetch("/api/sessions/answers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      setSubmitting(false);
 
-    if (res.ok) {
-      setResult(data);
-      setTally((t) => ({ correct: t.correct + (data.isCorrect ? 1 : 0), total: t.total + 1 }));
-    }
-  }
+      if (res.ok) {
+        setResult(data);
+        setTally((t) => ({ correct: t.correct + (data.isCorrect ? 1 : 0), total: t.total + 1 }));
+      }
+    },
+    [submitting, result, mode, selectedOptionId, freeText, sessionId, current]
+  );
+
+  useEffect(() => {
+    submitRef.current = handleSubmit;
+  }, [handleSubmit]);
+
+  // Coupe le micro dès qu'une réponse est validée, pour éviter une écoute résiduelle.
+  useEffect(() => {
+    if (result && speech.isListening) speech.stop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [result]);
+
+  // Chronomètre : uniquement en mode "conditions réelles". Se réinitialise à chaque nouvelle question.
+  useEffect(() => {
+    if (!timed || result) return;
+    setSecondsLeft(TIMER_SECONDS);
+    const interval = setInterval(() => {
+      setSecondsLeft((s) => {
+        if (s <= 1) {
+          clearInterval(interval);
+          submitRef.current(true);
+          return 0;
+        }
+        return s - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timed, index, result]);
 
   async function handleToggleFlag() {
     const method = flagged ? "DELETE" : "POST";
@@ -95,13 +168,25 @@ export default function TrainingClient({
     if (res.ok) setFlagged(!flagged);
   }
 
+  async function endSession() {
+    await fetch("/api/sessions", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId }),
+    });
+  }
+
+  async function handleAbandon() {
+    if (abandoning) return;
+    setAbandoning(true);
+    await endSession();
+    router.push("/dashboard");
+    router.refresh();
+  }
+
   async function handleNext() {
     if (index + 1 >= questions.length) {
-      await fetch("/api/sessions", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId }),
-      });
+      await endSession();
       router.push("/dashboard");
       router.refresh();
       return;
@@ -111,34 +196,77 @@ export default function TrainingClient({
     setFreeText("");
     setResult(null);
     setFlagged(false);
+    setShowHelp(false);
+    if (speech.isListening) speech.stop();
   }
+
+  const timerCritical = secondsLeft <= 10;
 
   return (
     <div className="max-w-2xl mx-auto">
       {/* Barre de progression */}
       <div className="flex items-center justify-between mb-2">
         <Link href="/dashboard" className="text-xs text-sumi/50 dark:text-washi/50 hover:text-ai">
-          ← Quitter
+          ← Quitter (reprendre plus tard)
         </Link>
         <span className="font-mono text-xs text-sumi/50 dark:text-washi/50">
-          {index + 1} / {questions.length} · {MODE_LABELS[mode]}
+          {overallDone + 1} / {totalQuestionCount} · {MODE_LABELS[mode]}
+          {timed && " · ⏱ chronométré"}
         </span>
       </div>
       <div className="h-1 bg-sumi/10 dark:bg-washi/10 rounded-full mb-8 overflow-hidden">
-        <div
-          className="h-full bg-ai transition-all duration-300"
-          style={{ width: `${progressPct}%` }}
-        />
+        <div className="h-full bg-ai transition-all duration-300" style={{ width: `${progressPct}%` }} />
       </div>
 
+      {/* Chronomètre */}
+      {timed && !result && (
+        <div className="flex items-center justify-center gap-3 mb-6">
+          <div className="h-1.5 flex-1 max-w-xs bg-sumi/10 dark:bg-washi/10 rounded-full overflow-hidden">
+            <div
+              className={`h-full transition-all duration-1000 linear ${timerCritical ? "bg-hanko" : "bg-ai"}`}
+              style={{ width: `${(secondsLeft / TIMER_SECONDS) * 100}%` }}
+            />
+          </div>
+          <span
+            className={`font-mono text-sm w-8 text-right ${
+              timerCritical ? "text-hanko" : "text-sumi/60 dark:text-washi/60"
+            }`}
+          >
+            {secondsLeft}s
+          </span>
+        </div>
+      )}
+
       <div className="card-washi p-8">
-        <p className="font-mono text-xs text-savane uppercase tracking-widest mb-4">
-          {current.themeName}
-        </p>
+        <p className="font-mono text-xs text-savane uppercase tracking-widest mb-4">{current.themeName}</p>
 
         <p className="font-display text-2xl leading-relaxed mb-6">{current.text_kana}</p>
 
-        <AudioPlayer text={current.text_kana} voicePreference={voicePreference} />
+        <AudioPlayer text={current.text_kana} voicePreference={voicePreference} autoPlay />
+
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={() => setShowHelp((v) => !v)}
+            className="text-xs text-ai underline underline-offset-2"
+          >
+            {showHelp ? "Masquer l'aide" : "❓ Je n'ai pas compris la question"}
+          </button>
+          {showHelp && (
+            <div className="mt-3 rounded-xl border border-ai/20 bg-ai/5 px-4 py-3">
+              {current.text_fr ? (
+                <>
+                  <p className="text-xs uppercase tracking-widest text-ai/70 mb-1">Traduction</p>
+                  <p className="text-sm">{current.text_fr}</p>
+                </>
+              ) : (
+                <p className="text-sm text-sumi/60 dark:text-washi/60">
+                  Traduction non disponible pour cette question.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
 
         <div className="mt-8">
           {mode === "easy" ? (
@@ -159,22 +287,50 @@ export default function TrainingClient({
               ))}
             </div>
           ) : (
-            <textarea
-              value={freeText}
-              onChange={(e) => setFreeText(e.target.value)}
-              disabled={!!result}
-              placeholder="日本語で答えてください…"
-              rows={4}
-              maxLength={500}
-              className="w-full rounded-xl border border-sumi/15 dark:border-washi/15 bg-transparent px-4 py-3 outline-none focus:border-ai resize-none disabled:opacity-70"
-            />
+            <div>
+              <textarea
+                value={freeText}
+                onChange={(e) => setFreeText(e.target.value)}
+                disabled={!!result || convertingSpeech}
+                placeholder="日本語で答えてください… (ou utilisez le micro)"
+                rows={4}
+                maxLength={500}
+                className="w-full rounded-xl border border-sumi/15 dark:border-washi/15 bg-transparent px-4 py-3 outline-none focus:border-ai resize-none disabled:opacity-70"
+              />
+              <div className="flex items-center gap-3 mt-3">
+                {speech.isSupported ? (
+                  <button
+                    type="button"
+                    onClick={() => (speech.isListening ? speech.stop() : speech.start())}
+                    disabled={!!result || convertingSpeech}
+                    className={`inline-flex items-center gap-2 text-sm px-4 py-2 rounded-full border transition-colors disabled:opacity-50 ${
+                      speech.isListening
+                        ? "border-hanko text-hanko bg-hanko/5"
+                        : "border-sumi/15 dark:border-washi/15 hover:border-ai/40"
+                    }`}
+                  >
+                    <span className={speech.isListening ? "animate-pulse" : ""}>🎤</span>
+                    {speech.isListening
+                      ? "Écoute en cours… (cliquer pour arrêter)"
+                      : convertingSpeech
+                      ? "Conversion en hiragana…"
+                      : "Répondre à l'oral"}
+                  </button>
+                ) : (
+                  <p className="text-xs text-sumi/40 dark:text-washi/40">
+                    La réponse orale n'est pas prise en charge par ce navigateur (essayez Chrome ou Edge).
+                  </p>
+                )}
+              </div>
+              {speech.error && <p className="text-xs text-hanko mt-2">{speech.error}</p>}
+            </div>
           )}
         </div>
 
         {result && (
           <div className="mt-6 border-t border-sumi/10 dark:border-washi/10 pt-6">
             <HankoFeedback correct={result.isCorrect} />
-            {mode === "hard" && result.feedbackDetails && result.feedbackDetails.length > 0 ? (
+            {mode !== "easy" && result.feedbackDetails && result.feedbackDetails.length > 0 ? (
               <ul className="text-sm text-sumi/70 dark:text-washi/70 mt-3 space-y-1.5 max-w-md mx-auto">
                 {result.feedbackDetails.map((line, i) => (
                   <li key={i} className="flex gap-2">
@@ -208,8 +364,8 @@ export default function TrainingClient({
 
           {!result ? (
             <button
-              onClick={handleSubmit}
-              disabled={submitting || (mode === "easy" ? !selectedOptionId : !freeText.trim())}
+              onClick={() => handleSubmit(false)}
+              disabled={submitting || convertingSpeech || (mode === "easy" ? !selectedOptionId : !freeText.trim())}
               className="btn-primary"
             >
               {submitting ? "Vérification…" : "Valider"}
@@ -222,9 +378,18 @@ export default function TrainingClient({
         </div>
       </div>
 
-      <p className="text-center text-xs text-sumi/40 dark:text-washi/40 mt-4 font-mono">
-        {tally.correct} / {tally.total} correctes dans cette session
-      </p>
+      <div className="flex items-center justify-between mt-4">
+        <button
+          onClick={handleAbandon}
+          disabled={abandoning}
+          className="text-xs text-hanko/70 hover:text-hanko underline underline-offset-2 disabled:opacity-50"
+        >
+          {abandoning ? "Abandon en cours…" : "Abandonner le test"}
+        </button>
+        <p className="text-center text-xs text-sumi/40 dark:text-washi/40 font-mono">
+          {tally.correct} / {tally.total} correctes
+        </p>
+      </div>
     </div>
   );
 }

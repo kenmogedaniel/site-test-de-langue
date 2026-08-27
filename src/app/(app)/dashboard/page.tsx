@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import Ruby from "@/components/ui/Ruby";
 import type { Difficulty } from "@/types/database";
 
-const MODES: { key: Difficulty; label: string; kanji: string; color: string; hoverColor: string }[] = [
-  { key: "easy", label: "Facile — QCM", kanji: "易", color: "text-savane", hoverColor: "hover:text-savane" },
-  { key: "medium", label: "Moyen — réponse libre", kanji: "中", color: "text-ai", hoverColor: "hover:text-ai" },
-  { key: "hard", label: "Difficile — structuré", kanji: "難", color: "text-hanko", hoverColor: "hover:text-hanko" },
+const MODES: { key: Difficulty; label: string; kanji: string; reading: string; color: string; hoverColor: string }[] = [
+  { key: "easy", label: "Facile — QCM", kanji: "易", reading: "やさ", color: "text-savane", hoverColor: "hover:text-savane" },
+  { key: "medium", label: "Moyen — réponse libre", kanji: "中", reading: "ちゅう", color: "text-ai", hoverColor: "hover:text-ai" },
+  { key: "hard", label: "Difficile — structuré", kanji: "難", reading: "むずか", color: "text-hanko", hoverColor: "hover:text-hanko" },
 ];
 
 export default async function DashboardPage() {
@@ -13,48 +14,33 @@ export default async function DashboardPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const userId = user!.id;
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("display_name")
-    .eq("id", user!.id)
-    .single();
-
-  const { data: sessions } = await supabase
-    .from("sessions")
-    .select("id, mode, started_at, ended_at")
-    .eq("user_id", user!.id)
-    .order("started_at", { ascending: false })
-    .limit(5);
+  // Première vague : toutes les requêtes indépendantes en parallèle plutôt qu'en séquence.
+  const [{ data: profile }, { data: sessions }, { data: themes }, { count: reviewCount }] =
+    await Promise.all([
+      supabase.from("profiles").select("display_name").eq("id", userId).single(),
+      supabase
+        .from("sessions")
+        .select("id, mode, started_at, ended_at")
+        .eq("user_id", userId)
+        .order("started_at", { ascending: false })
+        .limit(5),
+      supabase.from("themes").select("id, name, sort_order").order("sort_order"),
+      supabase.from("review_flags").select("id", { count: "exact", head: true }).eq("user_id", userId),
+    ]);
 
   const sessionIds = (sessions ?? []).map((s) => s.id);
 
-  const { count: totalAnswered } = await supabase
-    .from("session_answers")
-    .select("id", { count: "exact", head: true })
-    .in("session_id", sessionIds.length ? sessionIds : ["00000000-0000-0000-0000-000000000000"]);
+  // Une seule requête pour toutes les réponses (au lieu de trois requêtes redondantes
+  // pour le total, le nombre de bonnes réponses et le détail par thème).
+  const { data: allAnswers } = sessionIds.length
+    ? await supabase.from("session_answers").select("question_id, is_correct").in("session_id", sessionIds)
+    : { data: [] as { question_id: string; is_correct: boolean | null }[] };
 
-  const { count: totalCorrect } = await supabase
-    .from("session_answers")
-    .select("id", { count: "exact", head: true })
-    .in("session_id", sessionIds.length ? sessionIds : ["00000000-0000-0000-0000-000000000000"])
-    .eq("is_correct", true);
-
-  const { count: reviewCount } = await supabase
-    .from("review_flags")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", user!.id);
-
-  const successRate =
-    totalAnswered && totalAnswered > 0 ? Math.round(((totalCorrect ?? 0) / totalAnswered) * 100) : null;
-
-  // Statistiques par thème : on récupère toutes les réponses de l'utilisateur avec le thème de la question.
-  const { data: allAnswers } = await supabase
-    .from("session_answers")
-    .select("question_id, is_correct")
-    .in("session_id", sessionIds.length ? sessionIds : ["00000000-0000-0000-0000-000000000000"]);
-
-  const { data: themes } = await supabase.from("themes").select("id, name, sort_order").order("sort_order");
+  const totalAnswered = allAnswers?.length ?? 0;
+  const totalCorrect = (allAnswers ?? []).filter((a) => a.is_correct).length;
+  const successRate = totalAnswered > 0 ? Math.round((totalCorrect / totalAnswered) * 100) : null;
 
   let themeStats: { id: number; name: string; total: number; correct: number }[] = [];
   if (allAnswers && allAnswers.length > 0 && themes) {
@@ -89,14 +75,20 @@ export default async function DashboardPage() {
           Bienvenue
         </p>
         <h1 className="font-display text-4xl">
-          {profile?.display_name || "そちらの学生"} さん
+          {profile?.display_name || (
+            <>
+              そちらの
+              <Ruby kanji="学生" reading="がくせい" />
+            </>
+          )}{" "}
+          さん
         </h1>
       </div>
 
       {/* Stats rapides */}
       <div className="grid grid-cols-3 gap-4">
         <div className="card-washi p-6">
-          <p className="font-mono text-3xl">{totalAnswered ?? 0}</p>
+          <p className="font-mono text-3xl">{totalAnswered}</p>
           <p className="text-sm text-sumi/60 dark:text-washi/60 mt-1">questions répondues</p>
         </div>
         <div className="card-washi p-6">
@@ -119,10 +111,10 @@ export default async function DashboardPage() {
               href={`/train/${m.key}`}
               className="card-washi p-6 hover:border-ai/40 transition-colors group"
             >
-              <span className={`font-display text-2xl ${m.color}`}>{m.kanji}</span>
-              <h3 className="font-body font-medium mt-3 group-hover:text-ai transition-colors">
-                {m.label}
-              </h3>
+              <span className={`font-display text-2xl ${m.color}`}>
+                <Ruby kanji={m.kanji} reading={m.reading} />
+              </span>
+              <h3 className="font-body font-medium mt-3 group-hover:text-ai transition-colors">{m.label}</h3>
             </Link>
           ))}
         </div>
@@ -147,7 +139,7 @@ export default async function DashboardPage() {
                     <Link
                       key={m.key}
                       href={`/train/${m.key}?theme=${t.id}`}
-                      title={m.label}
+                      title={`${m.label} (${m.reading})`}
                       className={`w-8 h-8 rounded-full border border-sumi/15 dark:border-washi/15 flex items-center justify-center text-sm font-display hover:border-ai/50 ${m.hoverColor} transition-colors`}
                     >
                       {m.kanji}
@@ -195,7 +187,17 @@ export default async function DashboardPage() {
           <ul className="divide-y divide-sumi/10 dark:divide-washi/10">
             {sessions.map((s) => (
               <li key={s.id} className="py-3 flex items-center justify-between text-sm">
-                <span className="capitalize">{s.mode}</span>
+                <div className="flex items-center gap-2">
+                  <span className="capitalize">{s.mode}</span>
+                  {!s.ended_at && (
+                    <Link
+                      href={`/train/${s.mode}`}
+                      className="text-xs text-ai underline underline-offset-2"
+                    >
+                      reprendre
+                    </Link>
+                  )}
+                </div>
                 <span className="text-sumi/50 dark:text-washi/50 font-mono text-xs">
                   {new Date(s.started_at).toLocaleDateString("fr-FR", {
                     day: "2-digit",

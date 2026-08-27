@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/client";
+import PasswordField from "@/components/ui/PasswordField";
 
 const schema = z.object({
   displayName: z.string().min(1, "Entrez votre nom.").max(80),
@@ -87,23 +88,14 @@ export default function SignupForm() {
           required
         />
       </div>
-      <div>
-        <label htmlFor="password" className="block text-sm mb-2 text-sumi/70 dark:text-washi/70">
-          Mot de passe
-        </label>
-        <input
-          id="password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          autoComplete="new-password"
-          className="w-full rounded-xl border border-sumi/15 dark:border-washi/15 bg-transparent px-4 py-3 outline-none focus:border-ai"
-          required
-        />
-        <p className="text-xs text-sumi/50 dark:text-washi/50 mt-2">
-          8 caractères minimum, avec une majuscule et un chiffre.
-        </p>
-      </div>
+      <PasswordField
+        id="password"
+        label="Mot de passe"
+        value={password}
+        onChange={setPassword}
+        autoComplete="new-password"
+        hint="8 caractères minimum, avec une majuscule et un chiffre."
+      />
 
       {error && (
         <p role="alert" className="text-sm text-hanko">

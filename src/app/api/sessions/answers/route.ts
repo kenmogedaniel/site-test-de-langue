@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { matchMediumAnswer, evaluateAdvancedAnswer } from "@/lib/answerMatching";
+import { gradeFreeAnswer } from "@/lib/aiGrading";
 
 const submitSchema = z.object({
   sessionId: z.string().uuid(),
@@ -9,6 +9,7 @@ const submitSchema = z.object({
   mode: z.enum(["easy", "medium", "hard"]),
   selectedOptionId: z.string().uuid().optional(),
   userAnswer: z.string().max(500).optional(),
+  timedOut: z.boolean().optional(),
 });
 
 export async function POST(request: Request) {
@@ -26,7 +27,7 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Requête invalide." }, { status: 400 });
   }
-  const { sessionId, questionId, mode, selectedOptionId, userAnswer } = parsed.data;
+  const { sessionId, questionId, mode, selectedOptionId, userAnswer, timedOut } = parsed.data;
 
   // Vérifie que la session appartient bien à l'utilisateur (défense en profondeur, en plus des RLS policies).
   const { data: session } = await supabase
@@ -45,7 +46,11 @@ export async function POST(request: Request) {
   let feedback = "";
   let feedbackDetails: string[] | null = null;
 
-  if (mode === "easy") {
+  if (timedOut) {
+    isCorrect = false;
+    score = 0;
+    feedback = "時間切れ（じかんぎれ）— Temps écoulé.";
+  } else if (mode === "easy") {
     if (!selectedOptionId) {
       return NextResponse.json({ error: "Option manquante." }, { status: 400 });
     }
@@ -61,35 +66,35 @@ export async function POST(request: Request) {
     }
     isCorrect = option.is_correct;
     score = isCorrect ? 100 : 0;
-    feedback = isCorrect ? "正解！" : "不正解";
+    feedback = isCorrect ? "正解（せいかい）！" : "不正解（ふせいかい）";
   } else {
     if (!userAnswer || userAnswer.trim().length === 0) {
       return NextResponse.json({ error: "Réponse manquante." }, { status: 400 });
     }
-    const { data: model } = await supabase
-      .from("model_answers")
-      .select("text_kana, text_fr, acceptable_variants")
-      .eq("question_id", questionId)
-      .single();
 
-    if (!model) {
+    const [{ data: question }, { data: model }] = await Promise.all([
+      supabase.from("questions").select("text_kana").eq("id", questionId).single(),
+      supabase.from("model_answers").select("text_kana, text_fr, acceptable_variants").eq("question_id", questionId).single(),
+    ]);
+
+    if (!model || !question) {
       return NextResponse.json({ error: "Pas de réponse modèle pour cette question." }, { status: 404 });
     }
 
-    if (mode === "medium") {
-      const result = matchMediumAnswer(userAnswer, model.text_kana, model.acceptable_variants ?? []);
-      isCorrect = result.isCorrect;
-      score = result.score;
-      feedback = isCorrect
-        ? "正解！ Bonne réponse."
-        : `Pas tout à fait. Réponse modèle : ${result.closestMatch}`;
-    } else {
-      const evaluation = evaluateAdvancedAnswer(userAnswer, model.text_kana, model.text_fr);
-      isCorrect = evaluation.isCorrect;
-      score = evaluation.score;
-      feedback = evaluation.feedback.join(" ");
-      feedbackDetails = evaluation.feedback;
-    }
+    // Correction sémantique via IA : accepte toute réponse qui répond réellement à la
+    // question, pas seulement celles qui ressemblent au texte de référence stocké.
+    const grade = await gradeFreeAnswer(
+      mode,
+      question.text_kana,
+      userAnswer,
+      model.text_kana,
+      model.text_fr,
+      model.acceptable_variants ?? []
+    );
+    isCorrect = grade.isCorrect;
+    score = grade.score;
+    feedback = grade.feedback.join(" ");
+    feedbackDetails = grade.feedback;
   }
 
   const { error: insertError } = await supabase.from("session_answers").insert({

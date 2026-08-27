@@ -22,6 +22,10 @@ const config: Config = {
         },
         savane: "#C08A33",
         bamboo: "#4B7051",
+        sakura: {
+          DEFAULT: "#E8B4C0",
+          deep: "#C97B91",
+        },
       },
       fontFamily: {
         display: ["var(--font-shippori)", "serif"],
@@ -39,10 +43,23 @@ const config: Config = {
           "0%": { strokeDashoffset: "300" },
           "100%": { strokeDashoffset: "0" },
         },
+        "sakura-fall": {
+          "0%": { transform: "translateY(0) translateX(0) rotate(0deg)", opacity: "0" },
+          "8%": { opacity: "0.8" },
+          "50%": { transform: "translateY(50vh) translateX(18px) rotate(180deg)" },
+          "92%": { opacity: "0.7" },
+          "100%": { transform: "translateY(105vh) translateX(-12px) rotate(360deg)", opacity: "0" },
+        },
+        float: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-10px)" },
+        },
       },
       animation: {
         stamp: "stamp 0.45s cubic-bezier(0.2, 0.8, 0.3, 1) forwards",
         "brush-x": "brush-x 0.4s ease-out forwards",
+        "sakura-fall": "sakura-fall linear infinite",
+        float: "float 6s ease-in-out infinite",
       },
     },
   },

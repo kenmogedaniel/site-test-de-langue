@@ -1,5 +1,7 @@
 "use client";
 
+import Ruby from "@/components/ui/Ruby";
+
 export default function HankoFeedback({ correct }: { correct: boolean }) {
   if (correct) {
     return (
@@ -7,7 +9,9 @@ export default function HankoFeedback({ correct }: { correct: boolean }) {
         <div className="hanko-stamp">
           <span className="font-display text-3xl">正</span>
         </div>
-        <p className="text-sm text-bamboo font-medium">正解！ Correct !</p>
+        <p className="text-sm text-bamboo font-medium">
+          <Ruby kanji="正解" reading="せいかい" />！ Correct !
+        </p>
       </div>
     );
   }
@@ -26,7 +30,9 @@ export default function HankoFeedback({ correct }: { correct: boolean }) {
           strokeDasharray="300" style={{ animation: "brush-x 0.4s ease-out 0.1s forwards", strokeDashoffset: 300 }}
         />
       </svg>
-      <p className="text-sm text-hanko font-medium">不正解 — Pas tout à fait</p>
+      <p className="text-sm text-hanko font-medium">
+        <Ruby kanji="不正解" reading="ふせいかい" /> — Pas tout à fait
+      </p>
     </div>
   );
 }
