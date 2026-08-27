@@ -9,6 +9,13 @@ import type { VoicePref } from "@/types/database";
 const FEMALE_VOICE_HINTS = ["nanami", "ayumi", "haruka", "kyoko", "sayaka", "female", "女性"];
 const MALE_VOICE_HINTS = ["keita", "ichiro", "otoya", "daichi", "male", "男性"];
 
+/** Détecte Android, dont le moteur vocal système (routé via Chrome) gère mal les
+ *  utterances trop longues et les changements de hauteur de voix (pitch) — cause
+ *  fréquente d'un rendu audio saccadé/coupé sur ce système. */
+function isAndroid(): boolean {
+  return typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent);
+}
+
 function pickJapaneseVoice(
   voices: SpeechSynthesisVoice[],
   preference: VoicePref
@@ -38,7 +45,8 @@ function pickJapaneseVoice(
   }
 
   // 3. Une seule voix japonaise installée : impossible de changer de voix à proprement
-  //    parler. On le signale à l'appelant pour qu'il compense légèrement (hauteur de voix).
+  //    parler. On le signale à l'appelant pour qu'il compense légèrement (hauteur de voix),
+  //    sauf sur Android où cet ajustement provoque justement des saccades (voir speakJapanese).
   return { voice: jaVoices[0], distinct: false };
 }
 
@@ -67,6 +75,28 @@ export function ensureVoicesLoaded(): Promise<SpeechSynthesisVoice[]> {
   });
 }
 
+/** Découpe un texte japonais en phrases sur les ponctuations naturelles (。！？),
+ *  ponctuation ré-attachée à chaque morceau. Chrome tronque toute utterance de plus
+ *  d'environ 200-250 caractères (bug connu, plus marqué sur le moteur TTS d'Android) :
+ *  parler phrase par phrase, chaînées proprement, évite ce découpage sauvage. */
+function splitIntoSentences(text: string): string[] {
+  const parts = text.split(/(?<=[。！？])/).map((s) => s.trim()).filter(Boolean);
+  return parts.length > 0 ? parts : [text];
+}
+
+function speakOne(text: string, voice: SpeechSynthesisVoice | null, pitch: number): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "ja-JP";
+    utterance.rate = 0.95;
+    utterance.pitch = pitch;
+    if (voice) utterance.voice = voice;
+    utterance.onend = () => resolve();
+    utterance.onerror = (e) => reject(e.error);
+    window.speechSynthesis.speak(utterance);
+  });
+}
+
 /**
  * Lit un texte japonais à voix haute dans le navigateur.
  * Utilise la Web Speech API (gratuite, aucune clé requise) comme moteur par défaut.
@@ -82,28 +112,26 @@ export async function speakJapanese(text: string, voicePreference: VoicePref = "
   // Garantit que la liste des voix est chargée avant de choisir, pour éviter de se
   // retrouver sans voix japonaise disponible au tout premier clic sur "Écouter".
   const voices = await ensureVoicesLoaded();
+  const { voice, distinct } = pickJapaneseVoice(voices, voicePreference);
+  const android = isAndroid();
 
-  return new Promise((resolve, reject) => {
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "ja-JP";
-    utterance.rate = 0.95;
+  // Repli hauteur de voix : utile pour distinguer Homme/Femme quand une seule voix est
+  // installée, MAIS le moteur TTS système d'Android gère mal les pitch non standards
+  // (source fréquente de saccades/coupures) — on désactive donc ce réglage sur Android.
+  const pitch = !distinct && !android ? (voicePreference === "male" ? 0.92 : 1.08) : 1;
 
-    const { voice, distinct } = pickJapaneseVoice(voices, voicePreference);
-    if (voice) utterance.voice = voice;
+  window.speechSynthesis.cancel();
 
-    // Repli : un seul moteur vocal japonais est installé sur cet appareil, donc on ne
-    // peut pas changer de voix à proprement parler. Léger ajustement de hauteur pour
-    // rester perceptible sans sonner artificiel ou désagréable.
-    if (!distinct) {
-      utterance.pitch = voicePreference === "male" ? 0.92 : 1.08;
-    }
+  // Sur Android, enchaîner cancel() puis speak() dans le même tick provoque une
+  // condition de course connue du moteur TTS système : le nouvel énoncé est parfois
+  // tronqué ou saccadé car l'annulation précédente n'est pas encore traitée. Un court
+  // délai laisse le temps au moteur de se stabiliser avant de reprendre la parole.
+  if (android) await new Promise((r) => setTimeout(r, 150));
 
-    utterance.onend = () => resolve();
-    utterance.onerror = (e) => reject(e.error);
-
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
-  });
+  const sentences = splitIntoSentences(text);
+  for (const sentence of sentences) {
+    await speakOne(sentence, voice, pitch);
+  }
 }
 
 /** Indique si au moins deux voix japonaises distinctes sont installées sur cet appareil. */
