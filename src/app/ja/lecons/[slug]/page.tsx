@@ -34,7 +34,7 @@ function isKanaLesson(lesson: KanaLesson | MinnaLesson): lesson is KanaLesson {
 export function generateMetadata({ params }: Params): Metadata {
   const lesson = getMinnaLesson(params.slug) ?? getKanaLesson(params.slug);
   if (!lesson) return {};
-  return { title: `${lesson.title} — Leçons | Nihongo Mensetsu` };
+  return { title: `${lesson.title} — Leçons | Kadoya` };
 }
 
 export default function LessonPage({ params }: Params) {

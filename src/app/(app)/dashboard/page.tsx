@@ -86,18 +86,18 @@ export default async function DashboardPage() {
       </div>
 
       {/* Stats rapides */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="card-washi p-6">
-          <p className="font-mono text-3xl">{totalAnswered}</p>
-          <p className="text-sm text-sumi/60 dark:text-washi/60 mt-1">questions répondues</p>
+      <div className="grid grid-cols-3 gap-3 sm:gap-4">
+        <div className="card-washi p-4 sm:p-6">
+          <p className="font-mono text-2xl sm:text-3xl">{totalAnswered}</p>
+          <p className="mt-1 text-xs leading-tight text-sumi/60 sm:text-sm dark:text-washi/60">questions répondues</p>
         </div>
-        <div className="card-washi p-6">
-          <p className="font-mono text-3xl">{successRate !== null ? `${successRate}%` : "—"}</p>
-          <p className="text-sm text-sumi/60 dark:text-washi/60 mt-1">taux de réussite</p>
+        <div className="card-washi p-4 sm:p-6">
+          <p className="font-mono text-2xl sm:text-3xl">{successRate !== null ? `${successRate}%` : "—"}</p>
+          <p className="mt-1 text-xs leading-tight text-sumi/60 sm:text-sm dark:text-washi/60">taux de réussite</p>
         </div>
-        <div className="card-washi p-6">
-          <p className="font-mono text-3xl">{reviewCount ?? 0}</p>
-          <p className="text-sm text-sumi/60 dark:text-washi/60 mt-1">questions à revoir</p>
+        <div className="card-washi p-4 sm:p-6">
+          <p className="font-mono text-2xl sm:text-3xl">{reviewCount ?? 0}</p>
+          <p className="mt-1 text-xs leading-tight text-sumi/60 sm:text-sm dark:text-washi/60">questions à revoir</p>
         </div>
       </div>
 
@@ -131,10 +131,10 @@ export default async function DashboardPage() {
             {allThemes.map((t) => (
               <div
                 key={t.id}
-                className="flex items-center justify-between gap-4 px-4 py-3 rounded-xl border border-sumi/10 dark:border-washi/10"
+                className="flex flex-col gap-3 rounded-xl border border-sumi/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-washi/10"
               >
                 <span className="text-sm">{t.name}</span>
-                <div className="flex gap-2 shrink-0">
+                <div className="flex flex-wrap gap-2 shrink-0">
                   {MODES.map((m) => (
                     <Link
                       key={m.key}

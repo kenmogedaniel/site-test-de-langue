@@ -41,10 +41,15 @@ export default function SiteHeader({ signedIn = false }: { signedIn?: boolean })
     <header className="sticky top-0 z-50 border-b border-sumi/10 bg-washi/80 backdrop-blur-md dark:border-washi/10 dark:bg-washi-dark/80">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-6">
         <Link href="/" className="font-display text-xl tracking-tight">
-          <span className="inline-flex items-baseline gap-2">
-            面接日本語
+          <span className="inline-flex items-center gap-2">
+            <svg viewBox="0 0 64 64" className="h-6 w-6" aria-hidden>
+              <rect width="64" height="64" rx="16" fill="#a71e2f" />
+              <path d="M20 52V22a12 12 0 0 1 24 0v30" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" />
+              <circle cx="42" cy="34" r="3" fill="#fff" />
+            </svg>
+            Kadoya
             <span className="hidden text-[11px] font-body font-normal uppercase tracking-widest text-sumi/40 dark:text-washi/40 sm:inline">
-              Mensetsu
+              langues
             </span>
           </span>
         </Link>

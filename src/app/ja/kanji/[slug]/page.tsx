@@ -14,7 +14,7 @@ type Params = { params: { slug: string } };
 export function generateMetadata({ params }: Params): Metadata {
   const kanji = getKanji(params.slug);
   if (!kanji) return {};
-  return { title: `${kanji.kanji} — Kanji | Nihongo Mensetsu` };
+  return { title: `${kanji.kanji} — Kanji | Kadoya` };
 }
 
 export default function KanjiDetailPage({ params }: Params) {

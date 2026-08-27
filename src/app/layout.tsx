@@ -37,9 +37,13 @@ const plexMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "面接日本語 — Entraînement à l'entretien en japonais",
+  title: "Kadoya — Apprentissage des langues",
   description:
-    "Entraînez-vous aux questions d'entretien en japonais avec audio, correction et suivi de progression.",
+    "Plateforme d'apprentissage des langues pour les francophones : alphabets, vocabulaire, examens et entretiens, avec audio, correction intelligente et suivi de progression.",
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

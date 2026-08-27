@@ -27,7 +27,7 @@ export default function LoginForm() {
       return;
     }
 
-    const redirectTo = searchParams.get("redirectedFrom") || "/dashboard";
+    const redirectTo = searchParams.get("redirectedFrom") || "/";
     router.push(redirectTo);
     router.refresh();
   }

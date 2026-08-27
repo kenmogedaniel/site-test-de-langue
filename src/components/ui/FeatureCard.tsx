@@ -4,7 +4,7 @@ export default function FeatureCard({
   title,
   description,
 }: {
-  glyph: string;
+  glyph: React.ReactNode;
   badgeClass: string;
   title: string;
   description: string;

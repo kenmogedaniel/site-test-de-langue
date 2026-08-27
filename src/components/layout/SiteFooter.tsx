@@ -8,7 +8,7 @@ export default function SiteFooter() {
       <div className="mx-auto max-w-6xl px-6 py-14">
         <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr]">
           <div>
-            <p className="font-display text-xl">面接日本語</p>
+            <p className="font-display text-xl">Kadoya</p>
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-sumi/60 dark:text-washi/60">
               Plateforme d'apprentissage des langues pensée pour les francophones :
               alphabets, vocabulaire, examens et entretiens.
@@ -58,9 +58,9 @@ export default function SiteFooter() {
         </div>
 
         <div className="mt-12 flex flex-col items-start justify-between gap-3 border-t border-sumi/10 pt-6 text-xs text-sumi/40 sm:flex-row sm:items-center dark:border-washi/10 dark:text-washi/40">
-          <p>© {new Date().getFullYear()} 面接日本語 — Tous droits réservés.</p>
+          <p>© {new Date().getFullYear()} Kadoya — Tous droits réservés.</p>
           <p>
-            Au Japon, on dit que <span className="font-display">桜が咲く</span> quand on réussit un examen.
+            Chaque langue a sa porte : ouvrez la vôtre.
           </p>
         </div>
       </div>

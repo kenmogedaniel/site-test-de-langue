@@ -1,4 +1,5 @@
-export default function PhoneMockup() {
+export default function PhoneMockup({ variant = "japanese" }: { variant?: "japanese" | "neutral" }) {
+  const ja = variant === "japanese";
   return (
     <div className="relative mx-auto w-[280px] sm:w-[300px]">
       <div
@@ -10,13 +11,13 @@ export default function PhoneMockup() {
         className="absolute -left-16 top-20 z-10 animate-float rounded-full bg-white px-4 py-2 text-xs font-medium text-bamboo shadow-lg ring-1 ring-sumi/5 dark:bg-washi-dark"
         style={{ animationDelay: "0.8s" }}
       >
-        正解 ! ✓
+        {ja ? "正解 ! ✓" : "Bravo ! ✓"}
       </div>
       <div
         className="absolute -right-14 bottom-32 z-10 animate-float rounded-full bg-hanko px-4 py-2 text-xs font-semibold text-washi shadow-lg"
         style={{ animationDelay: "2.2s" }}
       >
-        +10 XP · 連続 7日
+        {ja ? "+10 XP · 連続 7日" : "+10 XP · 5 jours"}
       </div>
 
       <div className="relative rounded-[2.75rem] bg-sumi p-2.5 shadow-2xl ring-1 ring-black/10">
@@ -28,9 +29,9 @@ export default function PhoneMockup() {
           </div>
 
           <div className="mt-3 flex items-center justify-between border-b border-sumi/10 px-5 pb-3 dark:border-washi/10">
-            <span className="font-display text-sm">面接日本語</span>
+            <span className="font-display text-sm">Kadoya</span>
             <span className="rounded-full bg-sakura/25 px-2 py-0.5 text-[10px] font-medium text-sakura-deep dark:text-sakura">
-              連続 7日
+              {ja ? "連続 7日" : "5 jours"}
             </span>
           </div>
 
@@ -40,9 +41,9 @@ export default function PhoneMockup() {
 
           <div className="card-washi mx-4 mt-4 p-6 text-center">
             <p className="font-mono text-[10px] uppercase tracking-widest text-sumi/40 dark:text-washi/40">
-              Quel est ce son ?
+              {ja ? "Quel est ce son ?" : "Quel son entendez-vous ?"}
             </p>
-            <p className="mt-2 font-display text-6xl">あ</p>
+            <p className="mt-2 font-display text-6xl">{ja ? "あ" : "A"}</p>
             <button
               type="button"
               tabIndex={-1}

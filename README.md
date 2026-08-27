@@ -1,6 +1,6 @@
-# 面接日本語 — Nihongo Mensetsu Renshū
+# Kadoya — Apprentissage des langues
 
-Plateforme d'entraînement aux entretiens en japonais (QCM, réponse libre, réponse structurée), connectée à Supabase.
+Plateforme d'apprentissage des langues pour les francophones (le japonais est la première langue proposée) : alphabets, vocabulaire, examens et entraînement à l'entretien, connectée à Supabase.
 
 ## Démarrage rapide
 
