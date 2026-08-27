@@ -1,20 +1,82 @@
 import type { VoicePref } from "@/types/database";
 
 /**
- * Noms de voix japonaises connues, par plateforme (Windows/Edge, Chrome/Google, macOS).
- * Les noms exacts varient selon le navigateur/OS, d'où cette liste de correspondances
- * partielles (sous-chaînes) plutôt qu'une simple recherche de "male"/"female" dans le nom,
- * qui ne matche quasiment jamais les voix japonaises réelles.
+ * Synthèse vocale japonaise.
+ *
+ * Deux stratégies, par ordre de préférence :
+ *  1. Moteur TTS de Google relayé par la route serveur `/api/tts` — voix naturelle,
+ *     fiable et identique sur toutes les plateformes, y compris Android où la Web
+ *     Speech API du navigateur est médiocre (voix robotique, saccades, coupures).
+ *  2. Web Speech API (`window.speechSynthesis`) en secours — utilisée hors ligne ou
+ *     si le moteur serveur est indisponible.
  */
+
 const FEMALE_VOICE_HINTS = ["nanami", "ayumi", "haruka", "kyoko", "sayaka", "female", "女性"];
 const MALE_VOICE_HINTS = ["keita", "ichiro", "otoya", "daichi", "male", "男性"];
 
-/** Détecte Android, dont le moteur vocal système (routé via Chrome) gère mal les
- *  utterances trop longues et les changements de hauteur de voix (pitch) — cause
- *  fréquente d'un rendu audio saccadé/coupé sur ce système. */
 function isAndroid(): boolean {
   return typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent);
 }
+
+/** Référence à l'audio HTML5 actuellement en cours (pour pouvoir l'interrompre
+ *  lorsqu'une nouvelle lecture est demandée ou que le composant est démonté). */
+let activeAudio: HTMLAudioElement | null = null;
+
+/** Interrompt toute lecture HTML5 en cours (moteur TTS serveur). */
+export function stopServerAudio(): void {
+  if (activeAudio) {
+    activeAudio.pause();
+    activeAudio = null;
+  }
+}
+
+/** Joue l'audio MP3 renvoyé par la route /api/tts via un élément HTML5. */
+function playBlobAudio(blob: Blob): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    activeAudio = audio;
+    const cleanup = () => {
+      if (activeAudio === audio) activeAudio = null;
+      URL.revokeObjectURL(url);
+    };
+    audio.onended = () => {
+      cleanup();
+      resolve();
+    };
+    audio.onerror = () => {
+      cleanup();
+      reject(new Error("Lecture audio échouée"));
+    };
+    audio.play().catch((e) => {
+      cleanup();
+      reject(e);
+    });
+  });
+}
+
+/** Priorité 1 : moteur TTS de Google via la route serveur. Retourne false si on doit
+ *  basculer sur la Web Speech API (réseau, erreur serveur, etc.). */
+async function speakViaServer(text: string, voicePreference: VoicePref): Promise<boolean> {
+  try {
+    const res = await fetch("/api/tts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, voice: voicePreference }),
+    });
+    if (!res.ok) return false;
+    const blob = await res.blob();
+    if (!blob || blob.size === 0) return false;
+    await playBlobAudio(blob);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Secours : Web Speech API
+ * ------------------------------------------------------------------------- */
 
 function pickJapaneseVoice(
   voices: SpeechSynthesisVoice[],
@@ -29,13 +91,9 @@ function pickJapaneseVoice(
   const byName = (list: string[]) =>
     jaVoices.find((v) => list.some((h) => v.name.toLowerCase().includes(h)));
 
-  // 1. Correspondance directe par nom de voix connu.
   const matched = byName(hints);
   if (matched) return { voice: matched, distinct: true };
 
-  // 2. Plusieurs voix disponibles mais aucune reconnue par son nom : on choisit
-  //    de façon déterministe et stable une voix différente selon la préférence,
-  //    pour qu'un changement de réglage soit toujours audible.
   if (jaVoices.length > 1) {
     const sorted = [...jaVoices].sort((a, b) => a.name.localeCompare(b.name));
     const other = byName(otherHints);
@@ -44,18 +102,9 @@ function pickJapaneseVoice(
     return { voice: pool[index] ?? sorted[0], distinct: true };
   }
 
-  // 3. Une seule voix japonaise installée : impossible de changer de voix à proprement
-  //    parler. On le signale à l'appelant pour qu'il compense légèrement (hauteur de voix),
-  //    sauf sur Android où cet ajustement provoque justement des saccades (voir speakJapanese).
   return { voice: jaVoices[0], distinct: false };
 }
 
-/** Précharge la liste des voix (Chrome/Edge les chargent de façon asynchrone après le
- *  chargement de la page). Sans cette attente, un premier clic sur "Écouter" juste après
- *  l'arrivée sur la page peut se retrouver sans aucune voix japonaise disponible et
- *  basculer sur une voix par défaut inadaptée — d'où un rendu audio cassé/désagréable.
- *  Un timeout de sécurité évite de bloquer indéfiniment si l'évènement ne se déclenche
- *  jamais (certains navigateurs). */
 export function ensureVoicesLoaded(): Promise<SpeechSynthesisVoice[]> {
   return new Promise((resolve) => {
     if (typeof window === "undefined" || !window.speechSynthesis) return resolve([]);
@@ -75,10 +124,6 @@ export function ensureVoicesLoaded(): Promise<SpeechSynthesisVoice[]> {
   });
 }
 
-/** Découpe un texte japonais en phrases sur les ponctuations naturelles (。！？),
- *  ponctuation ré-attachée à chaque morceau. Chrome tronque toute utterance de plus
- *  d'environ 200-250 caractères (bug connu, plus marqué sur le moteur TTS d'Android) :
- *  parler phrase par phrase, chaînées proprement, évite ce découpage sauvage. */
 function splitIntoSentences(text: string): string[] {
   const parts = text.split(/(?<=[。！？])/).map((s) => s.trim()).filter(Boolean);
   return parts.length > 0 ? parts : [text];
@@ -97,40 +142,42 @@ function speakOne(text: string, voice: SpeechSynthesisVoice | null, pitch: numbe
   });
 }
 
-/**
- * Lit un texte japonais à voix haute dans le navigateur.
- * Utilise la Web Speech API (gratuite, aucune clé requise) comme moteur par défaut.
- * Pour brancher un moteur de meilleure qualité (Google Cloud TTS, Amazon Polly, ElevenLabs),
- * remplacez le corps de cette fonction par un appel à /api/tts qui retourne un flux audio,
- * et jouez-le avec un <audio> ou l'API Web Audio.
- */
-export async function speakJapanese(text: string, voicePreference: VoicePref = "female"): Promise<void> {
+/** Priorité 2 : Web Speech API du navigateur (secours). */
+async function speakViaWebSpeech(text: string, voicePreference: VoicePref): Promise<void> {
   if (typeof window === "undefined" || !window.speechSynthesis) {
     throw new Error("La synthèse vocale n'est pas disponible sur ce navigateur.");
   }
 
-  // Garantit que la liste des voix est chargée avant de choisir, pour éviter de se
-  // retrouver sans voix japonaise disponible au tout premier clic sur "Écouter".
   const voices = await ensureVoicesLoaded();
   const { voice, distinct } = pickJapaneseVoice(voices, voicePreference);
   const android = isAndroid();
-
-  // Repli hauteur de voix : utile pour distinguer Homme/Femme quand une seule voix est
-  // installée, MAIS le moteur TTS système d'Android gère mal les pitch non standards
-  // (source fréquente de saccades/coupures) — on désactive donc ce réglage sur Android.
   const pitch = !distinct && !android ? (voicePreference === "male" ? 0.92 : 1.08) : 1;
 
   window.speechSynthesis.cancel();
-
-  // Sur Android, enchaîner cancel() puis speak() dans le même tick provoque une
-  // condition de course connue du moteur TTS système : le nouvel énoncé est parfois
-  // tronqué ou saccadé car l'annulation précédente n'est pas encore traitée. Un court
-  // délai laisse le temps au moteur de se stabiliser avant de reprendre la parole.
   if (android) await new Promise((r) => setTimeout(r, 150));
 
   const sentences = splitIntoSentences(text);
   for (const sentence of sentences) {
     await speakOne(sentence, voice, pitch);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * API publique
+ * ------------------------------------------------------------------------- */
+
+/**
+ * Lit un texte japonais à voix haute. Utilise le moteur TTS de Google via la route
+ * `/api/tts` (bonne qualité, même sur mobile) et bascule sur la Web Speech API du
+ * navigateur si le serveur est indisponible ou hors ligne.
+ */
+export async function speakJapanese(text: string, voicePreference: VoicePref = "female"): Promise<void> {
+  // Annule toute lecture en cours (Web Speech ou Audio HTML5) pour éviter les chevauchements.
+  window.speechSynthesis?.cancel();
+  stopServerAudio();
+  const played = await speakViaServer(text, voicePreference);
+  if (!played) {
+    await speakViaWebSpeech(text, voicePreference);
   }
 }
 

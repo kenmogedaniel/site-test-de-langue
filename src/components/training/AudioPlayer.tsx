@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { speakJapanese, ensureVoicesLoaded } from "@/lib/tts";
+import { speakJapanese, ensureVoicesLoaded, stopServerAudio } from "@/lib/tts";
 import type { VoicePref } from "@/types/database";
 
 export default function AudioPlayer({
@@ -38,6 +38,7 @@ export default function AudioPlayer({
     return () => {
       cancelled = true;
       window.speechSynthesis?.cancel();
+      stopServerAudio();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoPlay, text]);
