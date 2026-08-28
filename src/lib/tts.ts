@@ -7,67 +7,152 @@ import type { VoicePref } from "@/types/database";
  *  1. Moteur TTS de Google relayé par la route serveur `/api/tts` — voix naturelle,
  *     fiable et identique sur toutes les plateformes, y compris Android où la Web
  *     Speech API du navigateur est médiocre (voix robotique, saccades, coupures).
+ *     Google ne fournit qu'une seule voix japonaise : pour distinguer Homme/Femme,
+ *     on applique un décalage de hauteur (pitch) à la voix féminine de Google.
  *  2. Web Speech API (`window.speechSynthesis`) en secours — utilisée hors ligne ou
- *     si le moteur serveur est indisponible.
+ *     si le moteur serveur est indisponible ou trop lent.
  */
 
 const FEMALE_VOICE_HINTS = ["nanami", "ayumi", "haruka", "kyoko", "sayaka", "female", "女性"];
 const MALE_VOICE_HINTS = ["keita", "ichiro", "otoya", "daichi", "male", "男性"];
 
+/** Délai maximal d'attente de la route /api/tts avant de basculer sur la Web Speech API.
+ *  Le premier appel peut être lent (démarrage du serveur + appel au moteur Google) :
+ *  sans cette limite, l'audio semblerait "bloqué" indéfiniment. */
+const SERVER_TIMEOUT_MS = 12000;
+
 function isAndroid(): boolean {
   return typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent);
 }
 
-/** Référence à l'audio HTML5 actuellement en cours (pour pouvoir l'interrompre
- *  lorsqu'une nouvelle lecture est demandée ou que le composant est démonté). */
-let activeAudio: HTMLAudioElement | null = null;
+/** Référence à la lecture en cours (élément HTML5 ou source Web Audio) pour pouvoir
+ *  l'interrompre lorsqu'une nouvelle lecture est demandée ou que le composant est démonté. */
+type ActivePlayback = {
+  source?: HTMLAudioElement;
+  stop: () => void;
+};
+let activePlayback: ActivePlayback | null = null;
 
-/** Interrompt toute lecture HTML5 en cours (moteur TTS serveur). */
-export function stopServerAudio(): void {
-  if (activeAudio) {
-    activeAudio.pause();
-    activeAudio = null;
+/** Interrompt la lecture en cours pour qu'une nouvelle demande ne se superpose jamais
+ *  à l'audio déjà diffusé. */
+function stopServerAudioNow(): void {
+  if (activePlayback) {
+    activePlayback.stop();
+    activePlayback = null;
   }
 }
 
-/** Joue l'audio MP3 renvoyé par la route /api/tts via un élément HTML5. */
+/** Interrompt toute lecture serveur en cours. */
+export function stopServerAudio(): void {
+  stopServerAudioNow();
+}
+
+/** Joue l'audio MP3 renvoyé par la route /api/tts via un élément HTML5. Léger et
+ *  immédiat : utilisé pour la voix féminine (lecture directe, sans décodage). */
 function playBlobAudio(blob: Blob): Promise<void> {
   return new Promise((resolve, reject) => {
+    let done = false;
     const url = URL.createObjectURL(blob);
     const audio = new Audio(url);
-    activeAudio = audio;
+    const playback: ActivePlayback = {
+      source: audio,
+      stop: () => {
+        audio.pause();
+        audio.onended = null;
+        audio.onerror = null;
+      },
+    };
+    activePlayback = playback;
     const cleanup = () => {
-      if (activeAudio === audio) activeAudio = null;
+      if (activePlayback === playback) activePlayback = null;
       URL.revokeObjectURL(url);
     };
     audio.onended = () => {
+      if (done) return;
+      done = true;
       cleanup();
       resolve();
     };
     audio.onerror = () => {
+      if (done) return;
+      done = true;
       cleanup();
       reject(new Error("Lecture audio échouée"));
     };
     audio.play().catch((e) => {
+      if (done) return;
+      done = true;
       cleanup();
       reject(e);
     });
   });
 }
 
+/** Joue l'audio avec une hauteur (pitch) ajustée pour créer une vraie voix masculine,
+ *  à partir de la même voix féminine de Google. Décodé puis repoussé plus grave. */
+function playBlobAudioMale(blob: Blob, rate = 0.9): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!Ctx) return reject(new Error("Web Audio indisponible"));
+
+    let ctx: AudioContext | null = new Ctx();
+    let done = false;
+
+    const finish = (err?: unknown) => {
+      if (done) return;
+      done = true;
+      ctx?.close().catch(() => {});
+      ctx = null;
+      if (activePlayback?.stop === stopRef) activePlayback = null;
+      if (err) reject(err);
+      else resolve();
+    };
+
+    const stopRef = () => {
+      if (ctx && ctx.state !== "closed") ctx.close().catch(() => {});
+      ctx = null;
+    };
+    activePlayback = { stop: stopRef };
+
+    blob
+      .arrayBuffer()
+      .then((buf) => ctx!.decodeAudioData(buf))
+      .then((buffer) => {
+        if (done) return;
+        const source = ctx!.createBufferSource();
+        source.buffer = buffer;
+        source.playbackRate.value = rate; // < 1 => voix plus grave (masculine)
+        source.connect(ctx!.destination);
+        source.onended = () => finish();
+        source.start();
+      })
+      .catch((e) => finish(e));
+  });
+}
+
 /** Priorité 1 : moteur TTS de Google via la route serveur. Retourne false si on doit
- *  basculer sur la Web Speech API (réseau, erreur serveur, etc.). */
+ *  basculer sur la Web Speech API (réseau, erreur serveur, timeout, etc.). */
 async function speakViaServer(text: string, voicePreference: VoicePref): Promise<boolean> {
+  let controller: AbortController | null = null;
   try {
+    controller = new AbortController();
+    const timer = setTimeout(() => controller!.abort(), SERVER_TIMEOUT_MS);
     const res = await fetch("/api/tts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text, voice: voicePreference }),
+      signal: controller.signal,
     });
+    clearTimeout(timer);
     if (!res.ok) return false;
     const blob = await res.blob();
     if (!blob || blob.size === 0) return false;
-    await playBlobAudio(blob);
+
+    if (voicePreference === "male") {
+      await playBlobAudioMale(blob);
+    } else {
+      await playBlobAudio(blob);
+    }
     return true;
   } catch {
     return false;
@@ -168,13 +253,15 @@ async function speakViaWebSpeech(text: string, voicePreference: VoicePref): Prom
 
 /**
  * Lit un texte japonais à voix haute. Utilise le moteur TTS de Google via la route
- * `/api/tts` (bonne qualité, même sur mobile) et bascule sur la Web Speech API du
- * navigateur si le serveur est indisponible ou hors ligne.
+ * `/api/tts` (bonne qualité, même sur mobile). La voix « Homme » est obtenue en
+ * abaissant la hauteur de la voix féminine de Google (pitch-shift), faute de voix
+ * masculine distincte côté Google. Bascule sur la Web Speech API du navigateur si
+ * le serveur est indisponible, trop lent ou hors ligne.
  */
 export async function speakJapanese(text: string, voicePreference: VoicePref = "female"): Promise<void> {
-  // Annule toute lecture en cours (Web Speech ou Audio HTML5) pour éviter les chevauchements.
+  // Annule toute lecture en cours (Web Speech ou Audio serveur) pour éviter les chevauchements.
   window.speechSynthesis?.cancel();
-  stopServerAudio();
+  stopServerAudioNow();
   const played = await speakViaServer(text, voicePreference);
   if (!played) {
     await speakViaWebSpeech(text, voicePreference);

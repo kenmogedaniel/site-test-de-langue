@@ -89,9 +89,9 @@ export default function SettingsForm({
         </div>
         {singleVoiceOnly && (
           <p className="text-xs text-sumi/50 dark:text-washi/50 mt-3">
-            Une seule voix japonaise est installée sur cet appareil : la différence Homme/Femme
-            reste audible via la hauteur de voix, mais pour deux voix distinctes, installez une
-            voix japonaise supplémentaire dans les paramètres vocaux de votre système.
+            La voix « Homme » est produite en abaissant la hauteur de la voix féminine :
+            la différence reste nettement audible même sur des appareils ne disposant
+            que d'une seule voix japonaise.
           </p>
         )}
       </div>
