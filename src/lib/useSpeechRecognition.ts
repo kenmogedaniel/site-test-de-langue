@@ -2,6 +2,20 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+/** Messages utilsateur selon le code d'erreur renvoyé par la Web Speech API.
+ *  Sur mobile, les échecs les plus fréquents sont `not-allowed` (permission micro
+ *  non accordée) et `network` (service hébergé, inaccessible sans réseau stable). */
+const SPEECH_ERROR_MESSAGES: Record<string, string> = {
+  "not-allowed":
+    "Le micro est bloqué : autorisez l'accès au microphone dans les réglages du navigateur, puis réessayez.",
+  "service-not-allowed":
+    "Le micro est bloqué par le navigateur : autorisez l'accès au microphone, puis réessayez.",
+  network:
+    "Problème de réseau : impossible de joindre le service de reconnaissance vocale. Vérifiez votre connexion ou tapez votre réponse.",
+  "audio-capture": "Aucun microphone détecté. Vérifiez votre micro ou tapez votre réponse.",
+  default: "Erreur de reconnaissance vocale. Réessayez ou tapez votre réponse.",
+};
+
 /**
  * Reconnaissance vocale japonaise via la Web Speech API du navigateur
  * (gratuite, aucune clé requise — même logique que la synthèse vocale dans lib/tts.ts).
@@ -56,8 +70,8 @@ export function useSpeechRecognition(onFinalTranscript?: (text: string) => void)
     };
 
     recognition.onerror = (event: any) => {
-      if (event.error === "no-speech") return; // silence temporaire, pas une vraie erreur
-      setError("Erreur de reconnaissance vocale. Réessayez ou tapez votre réponse.");
+      if (event.error === "no-speech" || event.error === "aborted") return; // pas une vraie erreur
+      setError(SPEECH_ERROR_MESSAGES[event.error] ?? SPEECH_ERROR_MESSAGES.default);
       setIsListening(false);
     };
 

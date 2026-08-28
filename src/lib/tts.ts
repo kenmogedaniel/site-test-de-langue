@@ -21,6 +21,35 @@ const MALE_VOICE_HINTS = ["keita", "ichiro", "otoya", "daichi", "male", "男性"
  *  sans cette limite, l'audio semblerait "bloqué" indéfiniment. */
 const SERVER_TIMEOUT_MS = 12000;
 
+/* ---------------------------------------------------------------------------
+ * Déverrouillage du canal audio mobile ("autoplay policy")
+ *
+ * Sur iOS/Android, un `<audio>` ou un `AudioContext` ne peut pas démarrer hors
+ * d'un geste utilisateur. L'autoplay de la première question, ainsi que les
+ * lectures lancées de façon asynchrone après un `fetch` (donc hors du geste),
+ * sont donc bloqués par le navigateur. On déverrouille une fois pour toute la
+ * session dès que l'utilisateur interagit (tap sur "Moyen", clic "Écouter", ...).
+ * ------------------------------------------------------------------------- */
+
+let sharedCtx: AudioContext | null = null;
+
+function getCtx(): AudioContext | null {
+  const Ctx =
+    window.AudioContext ||
+    (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  return Ctx ? new Ctx() : null;
+}
+
+/** Réutilise (ou crée) l'AudioContext partagé et garantit qu'il est "running".
+ *  À appeler dans un geste utilisateur pour lever la restriction d'autoplay. */
+export function unlockAudio(): void {
+  if (typeof window === "undefined") return;
+  if (!sharedCtx) sharedCtx = getCtx();
+  if (sharedCtx && sharedCtx.state === "suspended") {
+    sharedCtx.resume().catch(() => {});
+  }
+}
+
 function isAndroid(): boolean {
   return typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent);
 }
@@ -92,38 +121,37 @@ function playBlobAudio(blob: Blob): Promise<void> {
  *  à partir de la même voix féminine de Google. Décodé puis repoussé plus grave. */
 function playBlobAudioMale(blob: Blob, rate = 0.9): Promise<void> {
   return new Promise((resolve, reject) => {
-    const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!Ctx) return reject(new Error("Web Audio indisponible"));
-
-    let ctx: AudioContext | null = new Ctx();
+    unlockAudio();
+    const ctx = sharedCtx;
+    if (!ctx) return reject(new Error("Web Audio indisponible"));
     let done = false;
 
     const finish = (err?: unknown) => {
       if (done) return;
       done = true;
-      ctx?.close().catch(() => {});
-      ctx = null;
       if (activePlayback?.stop === stopRef) activePlayback = null;
       if (err) reject(err);
       else resolve();
     };
 
     const stopRef = () => {
-      if (ctx && ctx.state !== "closed") ctx.close().catch(() => {});
-      ctx = null;
+      sourceRef?.stop();
+      sourceRef = null;
     };
+    let sourceRef: AudioBufferSourceNode | null = null;
     activePlayback = { stop: stopRef };
 
     blob
       .arrayBuffer()
-      .then((buf) => ctx!.decodeAudioData(buf))
+      .then((buf) => ctx.decodeAudioData(buf))
       .then((buffer) => {
         if (done) return;
-        const source = ctx!.createBufferSource();
+        const source = ctx.createBufferSource();
         source.buffer = buffer;
         source.playbackRate.value = rate; // < 1 => voix plus grave (masculine)
-        source.connect(ctx!.destination);
+        source.connect(ctx.destination);
         source.onended = () => finish();
+        sourceRef = source;
         source.start();
       })
       .catch((e) => finish(e));
