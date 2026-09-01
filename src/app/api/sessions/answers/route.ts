@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { gradeFreeAnswer } from "@/lib/aiGrading";
+import { rateLimit, tooManyRequestsResponse } from "@/lib/rateLimit";
 
 const submitSchema = z.object({
   sessionId: z.string().uuid(),
@@ -21,6 +22,11 @@ export async function POST(request: Request) {
   if (!user) {
     return NextResponse.json({ error: "Non authentifié." }, { status: 401 });
   }
+
+  // Limite de débit par utilisateur : les modes Moyen/Difficile déclenchent un appel
+  // Claude (coûteux), la route doit être protégée contre un usage abusif.
+  const limit = rateLimit(`answers:${user.id}`, { limit: 30, windowMs: 60_000 });
+  if (!limit.success) return tooManyRequestsResponse(limit.resetAt, limit.remaining);
 
   const body = await request.json().catch(() => null);
   const parsed = submitSchema.safeParse(body);

@@ -4,10 +4,11 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { LANGUAGES } from "@/lib/languages";
 import Flag from "@/components/ui/Flag";
+import { createClient } from "@/lib/supabase/client";
 import { t, type InterfaceLang } from "@/lib/uiTranslations";
 
 export default function SiteHeader({
-  signedIn = false,
+  signedIn,
   lang = "ja",
   interfaceLang = "fr",
 }: {
@@ -17,7 +18,28 @@ export default function SiteHeader({
 }) {
   const [langOpen, setLangOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  // Quand `signedIn` n'est pas fourni, l'état de connexion est détecté côté client :
+  // le header reste ainsi utilisable sur des pages rendues sans serveur (static/ISR).
+  const [clientSignedIn, setClientSignedIn] = useState<boolean | null>(null);
   const langRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (signedIn !== undefined) return;
+    let active = true;
+    createClient()
+      .auth.getUser()
+      .then(({ data }) => {
+        if (active) setClientSignedIn(!!data.user);
+      })
+      .catch(() => {
+        if (active) setClientSignedIn(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [signedIn]);
+
+  const effectiveSignedIn = signedIn !== undefined ? signedIn : (clientSignedIn ?? false);
 
   const activeLang = LANGUAGES.find((l) => l.code === lang) ?? LANGUAGES.find((l) => l.active)!;
 
@@ -147,7 +169,7 @@ export default function SiteHeader({
             )}
           </div>
 
-          {signedIn ? (
+          {effectiveSignedIn ? (
             <Link href="/dashboard" className="btn-primary hidden !px-5 !py-2 text-sm sm:inline-flex">
               {t("header.monEspace", interfaceLang)}
             </Link>
@@ -199,7 +221,7 @@ export default function SiteHeader({
               </Link>
             ))}
             <hr className="my-2 border-sumi/10 dark:border-washi/10" />
-            {signedIn ? (
+            {effectiveSignedIn ? (
               <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="rounded-xl px-3 py-2.5 hover:bg-sumi/5 dark:hover:bg-washi/5">
                 {t("header.monEspace", interfaceLang)}
               </Link>

@@ -1,11 +1,10 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import type { Metadata } from "next";
 import SakuraRoadScene from "@/components/ui/SakuraRoadScene";
 import PhoneMockup from "@/components/ui/PhoneMockup";
 import FeatureCard from "@/components/ui/FeatureCard";
+import HeroCta from "@/components/ui/HeroCta";
 import Ruby from "@/components/ui/Ruby";
-
-export const dynamic = "force-dynamic";
 
 interface Module {
   kanji: string;
@@ -117,12 +116,17 @@ const TESTIMONIALS = [
 
 const JLPT_LEVELS = ["N5", "N4", "N3", "N2", "N1"];
 
-export default async function JapaneseHubPage() {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export const metadata: Metadata = {
+  title: "Apprendre le japonais",
+  description:
+    "Hiragana, katakana, 80 kanji N5, leçons guidées et entraînement à l'entretien en japonais, avec audio et correction intelligente.",
+  alternates: {
+    canonical: "/ja",
+    languages: { "fr-FR": "/ja", "en-US": "/en" },
+  },
+};
 
+export default function JapaneseHubPage() {
   const modules: Module[] = [
     {
       kanji: "平仮名",
@@ -161,7 +165,7 @@ export default async function JapaneseHubPage() {
       reading: "めんせつ",
       title: "Entraînement à l'entretien",
       description: "95 questions réelles, 3 modes, audio, correction intelligente.",
-      href: user ? "/dashboard" : "/login?redirectedFrom=/dashboard",
+      href: "/dashboard",
       status: "live",
     },
     {
@@ -199,12 +203,11 @@ export default async function JapaneseHubPage() {
                 Commencez gratuitement, progressez à votre rythme.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <Link
-                  href={user ? "/dashboard" : "/signup"}
+                <HeroCta
+                  dashboardLabel="Continuer"
+                  guestLabel="Commencer gratuitement"
                   className="inline-flex items-center gap-2 rounded-full bg-washi px-7 py-3 text-sm font-medium text-sumi shadow-lg transition-transform hover:scale-[1.03]"
-                >
-                  {user ? "Continuer" : "Commencer gratuitement"} <span aria-hidden>→</span>
-                </Link>
+                />
                 <Link
                   href="/ja/hiragana"
                   className="inline-flex items-center rounded-full border border-white/40 px-7 py-3 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/15"
@@ -401,20 +404,17 @@ export default async function JapaneseHubPage() {
               le premier hiragana n'attend que vous.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Link
-                href={user ? "/dashboard" : "/signup"}
+              <HeroCta
+                dashboardLabel="Retourner à mon espace"
+                guestLabel="Créer un compte gratuit"
                 className="inline-flex items-center justify-center rounded-full bg-washi px-7 py-3 text-sm font-medium text-sumi transition-transform hover:scale-[1.03]"
-              >
-                {user ? "Retourner à mon espace" : "Créer un compte gratuit"}
-              </Link>
-              {!user && (
-                <Link
-                  href="/login"
-                  className="inline-flex items-center justify-center rounded-full border border-washi/30 px-7 py-3 text-sm font-medium text-washi transition-colors hover:bg-washi/10"
-                >
-                  Se connecter
-                </Link>
-              )}
+                guestSecondary={{
+                  label: "Se connecter",
+                  href: "/login",
+                  className:
+                    "inline-flex items-center justify-center rounded-full border border-washi/30 px-7 py-3 text-sm font-medium text-washi transition-colors hover:bg-washi/10",
+                }}
+              />
             </div>
           </div>
         </div>

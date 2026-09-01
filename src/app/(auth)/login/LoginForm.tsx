@@ -5,6 +5,15 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import PasswordField from "@/components/ui/PasswordField";
 
+// Empêche une redirection vers un site externe : n'accepte qu'un chemin relatif
+// interne (ex. "/dashboard"), jamais une URL absolue ("https://…") ni "//".
+function safeRedirect(candidate: string | null): string | null {
+  if (!candidate) return null;
+  if (!candidate.startsWith("/")) return null;
+  if (candidate.startsWith("//")) return null;
+  return candidate;
+}
+
 export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -27,7 +36,7 @@ export default function LoginForm() {
       return;
     }
 
-    const redirectTo = searchParams.get("redirectedFrom") || "/";
+    const redirectTo = safeRedirect(searchParams.get("redirectedFrom")) || "/";
     router.push(redirectTo);
     router.refresh();
   }

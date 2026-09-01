@@ -45,6 +45,7 @@ export interface Session {
   id: string;
   user_id: string;
   mode: Difficulty;
+  timed: boolean;
   theme_filter: number | null;
   started_at: string;
   ended_at: string | null;

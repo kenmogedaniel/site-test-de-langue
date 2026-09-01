@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import type { Metadata } from "next";
 import SiteHeader from "@/components/layout/SiteHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
 import SakuraScene from "@/components/ui/SakuraScene";
@@ -7,9 +7,9 @@ import PhoneMockup from "@/components/ui/PhoneMockup";
 import FeatureCard from "@/components/ui/FeatureCard";
 import Flag from "@/components/ui/Flag";
 import LanguageToggle from "@/components/ui/LanguageToggle";
+import HeroCta from "@/components/ui/HeroCta";
+import WelcomeCard from "@/components/ui/WelcomeCard";
 import { LANGUAGES } from "@/lib/languages";
-
-export const dynamic = "force-dynamic";
 import { ENGLISH_LESSONS } from "@/lib/englishLessons";
 import { MINNA_LESSONS } from "@/lib/minnaLessons";
 import { t, type InterfaceLang } from "@/lib/uiTranslations";
@@ -55,31 +55,19 @@ const FEATURE_KEYS = [
   "feat.certification",
 ] as const;
 
+export const metadata: Metadata = {
+  title: "Accueil",
+  alternates: {
+    canonical: "/",
+  },
+};
+
 export default async function LanguagesLandingPage({
   searchParams,
 }: {
   searchParams: { ui?: string };
 }) {
   const interfaceLang: InterfaceLang = searchParams.ui === "en" ? "en" : "fr";
-
-  let user: { id: string; displayName: string | null } | null = null;
-  try {
-    const supabase = createClient();
-    const {
-      data: { user: u },
-    } = await supabase.auth.getUser();
-    if (u) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("display_name")
-        .eq("id", u.id)
-        .single();
-      user = { id: u.id, displayName: profile?.display_name ?? null };
-    }
-  } catch {
-    user = null;
-  }
-  const signedIn = !!user;
 
   const activeLangs = LANGUAGES.filter((l) => l.active);
   const nLessons = ENGLISH_LESSONS.length + MINNA_LESSONS.length;
@@ -98,7 +86,7 @@ export default async function LanguagesLandingPage({
 
   return (
     <>
-      <SiteHeader signedIn={signedIn} interfaceLang={interfaceLang} />
+      <SiteHeader interfaceLang={interfaceLang} />
       <main>
         {/* Hero */}
         <section className="relative overflow-hidden">
@@ -112,25 +100,7 @@ export default async function LanguagesLandingPage({
                 <LanguageToggle lang={interfaceLang} />
               </div>
 
-              {user && (
-                <div className="mb-6 flex items-center gap-3 rounded-2xl border border-ai/20 bg-ai/5 px-4 py-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ai font-display text-lg text-washi">
-                    {(user.displayName || user.id).charAt(0).toUpperCase()}
-                  </span>
-                  <div>
-                    <p className="text-sm font-medium">
-                      {t(
-                        "hero.welcome",
-                        interfaceLang,
-                        { name: user.displayName || t("hero.welcomeGuest", interfaceLang) }
-                      )}
-                    </p>
-                    <p className="text-xs text-sumi/60 dark:text-washi/60">
-                      {t("hero.back", interfaceLang)}
-                    </p>
-                  </div>
-                </div>
-              )}
+              <WelcomeCard interfaceLang={interfaceLang} />
 
               <h1 className="font-display text-5xl leading-[1.08] tracking-tight md:text-6xl">
                 {t("hero.title1", interfaceLang)}
@@ -145,12 +115,12 @@ export default async function LanguagesLandingPage({
                   {t("hero.ctaStart", interfaceLang)}
                   <span aria-hidden>→</span>
                 </Link>
-                <Link
-                  href={signedIn ? "/dashboard" : "/login"}
+                <HeroCta
+                  dashboardLabel={t("hero.ctaDashboard", interfaceLang)}
+                  guestLabel={t("hero.ctaLogin", interfaceLang)}
+                  guestHref="/login"
                   className="btn-secondary"
-                >
-                  {signedIn ? t("hero.ctaDashboard", interfaceLang) : t("hero.ctaLogin", interfaceLang)}
-                </Link>
+                />
               </div>
               <dl className="mt-10 flex flex-wrap gap-x-10 gap-y-4">
                 {stats.map((s) => (
@@ -244,12 +214,11 @@ export default async function LanguagesLandingPage({
                 {t("cta.subtitle", interfaceLang)}
               </p>
               <div className="mt-8 flex flex-wrap justify-center gap-3">
-                <Link
-                  href={signedIn ? "/dashboard" : "/signup"}
+                <HeroCta
+                  dashboardLabel={t("cta.retour", interfaceLang)}
+                  guestLabel={t("cta.creerCompte", interfaceLang)}
                   className="inline-flex items-center justify-center rounded-full bg-washi px-7 py-3 text-sm font-medium text-sumi transition-transform hover:scale-[1.03]"
-                >
-                  {signedIn ? t("cta.retour", interfaceLang) : t("cta.creerCompte", interfaceLang)}
-                </Link>
+                />
                 {activeLangs.map((l) => (
                   <Link
                     key={l.code}

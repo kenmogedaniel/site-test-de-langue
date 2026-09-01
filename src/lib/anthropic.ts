@@ -12,7 +12,10 @@
  */
 export async function callClaude(system: string, userMessage: string, maxTokens = 400): Promise<string | null> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return null;
+  if (!apiKey) {
+    console.warn("[anthropic] Aucune clé API configurée, bascule sur le mode de secours.");
+    return null;
+  }
 
   try {
     const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -33,11 +36,31 @@ export async function callClaude(system: string, userMessage: string, maxTokens 
       signal: AbortSignal.timeout(15000),
     });
 
-    if (!res.ok) return null;
+    if (!res.ok) {
+      // On différencie les causes pour pouvoir agir : quota, clé invalide ou erreur serveur.
+      if (res.status === 429) {
+        console.warn("[anthropic] Quota ou limite de débit atteint (429), bascule sur le secours.");
+      } else if (res.status === 401 || res.status === 403) {
+        console.error("[anthropic] Clé API invalide ou refusée (HTTP " + res.status + "), vérifiez ANTHROPIC_API_KEY.");
+      } else {
+        const detail = await res.text().then((t) => t.slice(0, 200)).catch(() => "");
+        console.error("[anthropic] Erreur API HTTP " + res.status + " : " + detail);
+      }
+      return null;
+    }
+
     const data = await res.json();
     const textBlock = (data?.content ?? []).find((b: { type: string }) => b.type === "text");
-    return textBlock?.text ?? null;
-  } catch {
+    // Réponse réussie mais sans bloc de texte attendu : anomalie côté API, à signaler.
+    if (!textBlock?.text) {
+      console.error("[anthropic] Réponse inattendue sans bloc texte, bascule sur le secours.");
+      return null;
+    }
+    return textBlock.text as string;
+  } catch (err) {
+    // Timeout (AbortSignal.timeout) ou erreur réseau : l'appelant bascule sur le secours.
+    const reason = err instanceof Error ? err.name : "inconnue";
+    console.warn("[anthropic] Échec réseau/timeout (" + reason + "), bascule sur le secours.");
     return null;
   }
 }

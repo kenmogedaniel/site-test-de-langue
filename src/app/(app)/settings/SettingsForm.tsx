@@ -27,6 +27,13 @@ export default function SettingsForm({
     document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme]);
 
+  // Persiste le thème dans un cookie (lecture côté serveur = aucun flash au chargement).
+  function applyTheme(next: ThemePref) {
+    document.documentElement.classList.toggle("dark", next === "dark");
+    const maxAge = 365 * 24 * 60 * 60; // 1 an
+    document.cookie = `theme=${next};path=/;max-age=${maxAge};samesite=Lax`;
+  }
+
   useEffect(() => {
     ensureVoicesLoaded().then((voices) => setSingleVoiceOnly(!hasDistinctJapaneseVoices(voices)));
   }, []);
@@ -48,7 +55,7 @@ export default function SettingsForm({
 
   function handleThemeChange(t: ThemePref) {
     setTheme(t);
-    document.documentElement.classList.toggle("dark", t === "dark");
+    applyTheme(t);
     persist({ theme_pref: t });
   }
 

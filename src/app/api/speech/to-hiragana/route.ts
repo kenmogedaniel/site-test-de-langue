@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { callClaude } from "@/lib/anthropic";
 import { kanjiToHiraganaApprox } from "@/lib/kanjiDictionary";
+import { rateLimit, tooManyRequestsResponse } from "@/lib/rateLimit";
 
 const schema = z.object({ text: z.string().min(1).max(500) });
 
@@ -14,6 +15,10 @@ export async function POST(request: Request) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Non authentifié." }, { status: 401 });
+
+  // Limite de débit par utilisateur : chaque appel consomme un crédit Claude.
+  const limit = rateLimit(`hiragana:${user.id}`, { limit: 20, windowMs: 60_000 });
+  if (!limit.success) return tooManyRequestsResponse(limit.resetAt, limit.remaining);
 
   const body = await request.json().catch(() => null);
   const parsed = schema.safeParse(body);

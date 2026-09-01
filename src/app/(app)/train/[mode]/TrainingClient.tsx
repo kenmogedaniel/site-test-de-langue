@@ -178,6 +178,9 @@ export default function TrainingClient({
 
   async function handleAbandon() {
     if (abandoning) return;
+    // Confirme avant de clôturer la session : un clic accidentel ne doit pas
+    // faire perdre la progression en cours.
+    if (!window.confirm("Abandonner le test ? La session en cours sera clôturée.")) return;
     setAbandoning(true);
     await endSession();
     router.push("/dashboard");

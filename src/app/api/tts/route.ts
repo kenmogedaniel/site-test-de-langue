@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { getClientIp, rateLimit, tooManyRequestsResponse } from "@/lib/rateLimit";
 
 const schema = z.object({
   text: z.string().min(1).max(800),
@@ -24,6 +25,12 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   const parsed = schema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Requête invalide." }, { status: 400 });
+
+  // Limite de débit par IP : la route est publique et fait appel à un service externe,
+  // elle doit être protégée contre les abus (30 requêtes / min / IP).
+  const ip = getClientIp(request);
+  const limit = rateLimit(`tts:${ip}`, { limit: 30, windowMs: 60_000 });
+  if (!limit.success) return tooManyRequestsResponse(limit.resetAt, limit.remaining);
 
   const { text, voice, lang } = parsed.data;
 
