@@ -1,8 +1,13 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { InterfaceLang } from "@/lib/uiTranslations";
 
+/**
+ * Interrupteur de langue d'interface. Bascule le paramètre `?ui=` sur le chemin
+ * courant (pas seulement la racine), pour qu'une page produit puisse être relue
+ * dans l'autre langue sans quitter sa route.
+ */
 export default function LanguageToggle({
   lang,
   dark = false,
@@ -11,12 +16,13 @@ export default function LanguageToggle({
   dark?: boolean;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
 
   function switchTo(next: InterfaceLang) {
     const params = new URLSearchParams(searchParams.toString());
     params.set("ui", next);
-    router.push(`/?${params.toString()}`);
+    router.push(`${pathname}?${params.toString()}`);
   }
 
   const base =
@@ -24,7 +30,9 @@ export default function LanguageToggle({
 
   return (
     <div
-      className={`inline-flex items-center rounded-full border p-0.5 ${dark ? "border-white/25" : "border-sumi/15 dark:border-washi/15"}`}
+      className={`inline-flex items-center rounded-full border p-0.5 ${
+        dark ? "border-white/25" : "border-sumi/15 dark:border-washi/15"
+      }`}
       role="group"
       aria-label="Language"
     >

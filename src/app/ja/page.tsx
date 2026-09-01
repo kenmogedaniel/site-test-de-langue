@@ -5,12 +5,14 @@ import PhoneMockup from "@/components/ui/PhoneMockup";
 import FeatureCard from "@/components/ui/FeatureCard";
 import HeroCta from "@/components/ui/HeroCta";
 import Ruby from "@/components/ui/Ruby";
+import LanguageToggle from "@/components/ui/LanguageToggle";
+import { t, type InterfaceLang } from "@/lib/uiTranslations";
 
 interface Module {
   kanji: string;
   reading: string;
-  title: string;
-  description: string;
+  titleKey: string;
+  descriptionKey: string;
   href?: string;
   status: "live" | "soon";
 }
@@ -19,44 +21,38 @@ const FEATURES = [
   {
     glyph: "学",
     badgeClass: "bg-ai/10 text-ai",
-    title: "Leçons guidées",
-    description:
-      "Les 46 hiragana pas à pas, avec audio natif et auto-évaluation honnête.",
+    titleKey: "ja.feat.leconsGuidees",
+    descKey: "ja.feat.leconsGuidees.desc",
   },
   {
     glyph: "対",
     badgeClass: "bg-hanko/10 text-hanko",
-    title: "Entraînement à l'entretien",
-    description:
-      "95 questions réelles d'entretien, 3 modes d'exercice, du QCM à la réponse libre.",
+    titleKey: "ja.feat.entretien",
+    descKey: "ja.feat.entretien.desc",
   },
   {
     glyph: "智",
     badgeClass: "bg-savane/10 text-savane",
-    title: "Correction intelligente",
-    description:
-      "Une IA évalue vos réponses écrites et orales et vous explique comment progresser.",
+    titleKey: "ja.feat.correction",
+    descKey: "ja.feat.correction.desc",
   },
   {
     glyph: "音",
     badgeClass: "bg-bamboo/10 text-bamboo",
-    title: "Audio intégré",
-    description:
-      "Écoutez chaque mot et chaque question à voix haute pour travailler l'oreille.",
+    titleKey: "ja.feat.audio",
+    descKey: "ja.feat.audio.desc",
   },
   {
     glyph: "進",
     badgeClass: "bg-sakura-deep/15 text-sakura-deep dark:text-sakura",
-    title: "Suivi de progression",
-    description:
-      "Historique complet, statistiques par session et questions à revoir signalées.",
+    titleKey: "ja.feat.suivi",
+    descKey: "ja.feat.suivi.desc",
   },
   {
     glyph: "認",
     badgeClass: "bg-ai/10 text-ai",
-    title: "Objectif certification",
-    description:
-      "Parcours aligné sur les niveaux du JLPT, de N5 à N1, pour viser le certificat.",
+    titleKey: "ja.feat.certification",
+    descKey: "ja.feat.certification.desc",
   },
 ];
 
@@ -64,30 +60,27 @@ const GUIDES = [
   {
     kanji: "平仮名",
     gradient: "from-sakura/70 to-hanko/40",
-    category: "Alphabet · Guide",
-    title: "Mémoriser les 46 hiragana sans y passer des heures",
-    excerpt:
-      "La méthode des petits pas : révision espacée, audio et auto-évaluation pour ancrer chaque son durablement.",
+    categoryKey: "ja.guide.hiragana.cat",
+    titleKey: "ja.guide.hiragana.title",
+    excerptKey: "ja.guide.hiragana.excerpt",
     href: "/ja/hiragana",
     live: true,
   },
   {
     kanji: "面接",
     gradient: "from-ai/25 to-ai-dark/15",
-    category: "Entretien · Conseils",
-    title: "Réussir un entretien au Japon : les questions incontournables",
-    excerpt:
-      "Jikoshōkai, motivations, points faibles : découvrez les questions qui reviennent et entraînez-vous dessus.",
+    categoryKey: "ja.guide.entretien.cat",
+    titleKey: "ja.guide.entretien.title",
+    excerptKey: "ja.guide.entretien.excerpt",
     href: "/login?redirectedFrom=/dashboard",
     live: true,
   },
   {
     kanji: "試験",
     gradient: "from-bamboo/30 to-bamboo/10",
-    category: "JLPT · Bientôt",
-    title: "Tout savoir du JLPT : niveaux, format et stratégie",
-    excerpt:
-      "De N5 à N1 : ce que chaque niveau exige, comment l'épreuve se déroule et par où commencer selon votre profil.",
+    categoryKey: "ja.guide.ljpt.cat",
+    titleKey: "ja.guide.jlpt.title",
+    excerptKey: "ja.guide.jlpt.excerpt",
     href: undefined,
     live: false,
   },
@@ -95,22 +88,19 @@ const GUIDES = [
 
 const TESTIMONIALS = [
   {
-    quote:
-      "Les hiragana me résistaient depuis des mois. Trois semaines avec le mode révision et ça rentre tout seul.",
+    quoteKey: "ja.t1.quote",
     name: "Camille R.",
-    context: "prépare le N5",
+    ctxKey: "ja.t1.ctx",
   },
   {
-    quote:
-      "Le mode entretien avec correction automatique, c'est exactement ce qu'il me fallait avant mon dossier pour Tokyo.",
+    quoteKey: "ja.t2.quote",
     name: "Mehdi K.",
-    context: "échange universitaire",
+    ctxKey: "ja.t2.ctx",
   },
   {
-    quote:
-      "J'écoute chaque question à voix haute, je répète, je progresse. Simple et efficace.",
+    quoteKey: "ja.t3.quote",
     name: "Léa T.",
-    context: "voyage au Japon",
+    ctxKey: "ja.t3.ctx",
   },
 ];
 
@@ -126,53 +116,59 @@ export const metadata: Metadata = {
   },
 };
 
-export default function JapaneseHubPage() {
+export default function JapaneseHubPage({
+  searchParams,
+}: {
+  searchParams: { ui?: string };
+}) {
+  const lang: InterfaceLang = searchParams.ui === "en" ? "en" : "fr";
+
   const modules: Module[] = [
     {
       kanji: "平仮名",
       reading: "ひらがな",
-      title: "Hiragana",
-      description: "Les 46 sons de base, avec audio et auto-évaluation.",
+      titleKey: "ja.modules.hiragana.title",
+      descriptionKey: "ja.modules.hiragana.desc",
       href: "/ja/hiragana",
       status: "live",
     },
     {
       kanji: "片仮名",
       reading: "かたかな",
-      title: "Katakana",
-      description: "Pour les mots d'origine etrangere, avec ordre de traits.",
+      titleKey: "ja.modules.katakana.title",
+      descriptionKey: "ja.modules.katakana.desc",
       href: "/ja/lecons/katakana-a",
       status: "live",
     },
     {
       kanji: "授業",
       reading: "じゅぎょう",
-      title: "Lecons guidees",
-      description: "Kana ligne par ligne + cours structure en 25 lecons, tout en audio.",
+      titleKey: "ja.modules.lecons.title",
+      descriptionKey: "ja.modules.lecons.desc",
       href: "/ja/lecons",
       status: "live",
     },
     {
       kanji: "漢字",
       reading: "かんじ",
-      title: "Kanji",
-      description: "80 kanji N5 par theme, avec lectures, mots et ordre des traits.",
+      titleKey: "ja.modules.kanji.title",
+      descriptionKey: "ja.modules.kanji.desc",
       href: "/ja/kanji",
       status: "live",
     },
     {
       kanji: "面接",
       reading: "めんせつ",
-      title: "Entraînement à l'entretien",
-      description: "95 questions réelles, 3 modes, audio, correction intelligente.",
+      titleKey: "ja.modules.entretien.title",
+      descriptionKey: "ja.modules.entretien.desc",
       href: "/dashboard",
       status: "live",
     },
     {
       kanji: "試験",
       reading: "しけん",
-      title: "Tests blancs JLPT",
-      description: "Épreuves chronométrées de vocabulaire, grammaire et écoute.",
+      titleKey: "ja.modules.jlpt.title",
+      descriptionKey: "ja.modules.jlpt.desc",
       status: "soon",
     },
   ];
@@ -186,33 +182,34 @@ export default function JapaneseHubPage() {
         <div className="relative mx-auto flex min-h-[540px] max-w-6xl items-center px-6 pb-14 pt-24">
           <div className="grid w-full items-center gap-12 lg:grid-cols-[1.2fr_auto]">
             <div className="text-washi drop-shadow-sm">
-              <Link
-                href="/"
-                className="font-mono text-xs text-washi/80 transition-colors hover:text-washi"
-              >
-                ← Toutes les langues
-              </Link>
+              <div className="flex items-center justify-between">
+                <Link
+                  href="/"
+                  className="font-mono text-xs text-washi/80 transition-colors hover:text-washi"
+                >
+                  {t("ja.allLangs", lang)}
+                </Link>
+                <LanguageToggle lang={lang} dark />
+              </div>
               <h1 className="mt-4 font-display text-6xl leading-[1.05] tracking-tight md:text-7xl">
-                Apprenez
+                {t("ja.heroTitle1", lang)}
                 <br />
-                le japonais
+                {t("ja.heroTitle2", lang)}
               </h1>
               <p className="mt-5 max-w-lg leading-relaxed text-washi/90">
-                Un parcours complet, de l'alphabet à l'entretien d'admission :
-                leçons, audio, correction intelligente et suivi de progression.
-                Commencez gratuitement, progressez à votre rythme.
+                {t("ja.heroSubtitle", lang)}
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <HeroCta
-                  dashboardLabel="Continuer"
-                  guestLabel="Commencer gratuitement"
+                  dashboardLabel={t("ja.ctaContinue", lang)}
+                  guestLabel={t("ja.ctaStart", lang)}
                   className="inline-flex items-center gap-2 rounded-full bg-washi px-7 py-3 text-sm font-medium text-sumi shadow-lg transition-transform hover:scale-[1.03]"
                 />
                 <Link
                   href="/ja/hiragana"
                   className="inline-flex items-center rounded-full border border-white/40 px-7 py-3 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/15"
                 >
-                  Essayer les hiragana
+                  {t("ja.tryHiragana", lang)}
                 </Link>
               </div>
             </div>
@@ -226,17 +223,21 @@ export default function JapaneseHubPage() {
       {/* Fonctionnalités */}
       <section id="fonctionnalites" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-20">
         <p className="font-mono text-xs uppercase tracking-widest text-sumi/50 dark:text-washi/50">
-          La méthode
+          {t("ja.methodEyebrow", lang)}
         </p>
-        <h2 className="mt-2 font-display text-3xl">Comment apprendre le japonais ?</h2>
+        <h2 className="mt-2 font-display text-3xl">{t("ja.methodTitle", lang)}</h2>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-sumi/60 dark:text-washi/60">
-          Ce n'est un secret pour personne : la motivation est la clé. Choisissez les
-          sujets qui vous intéressent, la méthode qui vous convient, et laissez la
-          progression faire le reste.
+          {t("ja.methodSubtitle", lang)}
         </p>
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map((f) => (
-            <FeatureCard key={f.title} {...f} />
+            <FeatureCard
+              key={f.titleKey}
+              glyph={f.glyph}
+              badgeClass={f.badgeClass}
+              title={t(f.titleKey, lang)}
+              description={t(f.descKey, lang)}
+            />
           ))}
         </div>
       </section>
@@ -245,9 +246,9 @@ export default function JapaneseHubPage() {
       <section className="mx-auto max-w-6xl px-6 pb-4">
         <div className="card-washi p-8">
           <div className="flex items-center justify-between">
-            <h2 className="font-display text-xl">Progression par niveau</h2>
+            <h2 className="font-display text-xl">{t("ja.jlpt.title", lang)}</h2>
             <span className="font-mono text-xs uppercase tracking-widest text-sumi/40 dark:text-washi/40">
-              Bientôt disponible
+              {t("ja.soon", lang)}
             </span>
           </div>
           <div className="mt-6 flex gap-2">
@@ -270,12 +271,12 @@ export default function JapaneseHubPage() {
 
       {/* Modules */}
       <section id="modules" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-16">
-        <h2 className="font-display text-3xl">Modules</h2>
+        <h2 className="font-display text-3xl">{t("ja.modulesTitle", lang)}</h2>
         <div className="mt-8 grid gap-4 md:grid-cols-2">
           {modules.map((m) =>
             m.status === "live" && m.href ? (
               <Link
-                key={m.title}
+                key={m.titleKey}
                 href={m.href}
                 className="card-washi group relative overflow-hidden p-7 transition-all hover:-translate-y-1 hover:border-ai/40 hover:shadow-md"
               >
@@ -286,14 +287,14 @@ export default function JapaneseHubPage() {
                   <Ruby kanji={m.kanji} reading={m.reading} />
                 </span>
                 <h3 className="mt-3 font-body text-lg font-semibold transition-colors group-hover:text-ai">
-                  {m.title}
+                  {t(m.titleKey, lang)}
                 </h3>
-                <p className="mt-2 text-sm leading-relaxed text-sumi/60 dark:text-washi/60">{m.description}</p>
-                <span className="mt-4 inline-block text-xs font-medium text-ai">Ouvrir →</span>
+                <p className="mt-2 text-sm leading-relaxed text-sumi/60 dark:text-washi/60">{t(m.descriptionKey, lang)}</p>
+                <span className="mt-4 inline-block text-xs font-medium text-ai">{t("ja.modules.continuer", lang)}</span>
               </Link>
             ) : (
               <div
-                key={m.title}
+                key={m.titleKey}
                 className="relative overflow-hidden rounded-2xl border border-dashed border-sumi/15 p-7 opacity-55 dark:border-washi/15"
               >
                 <span className="absolute -right-3 -top-5 select-none font-display text-7xl opacity-[0.06]" aria-hidden>
@@ -302,10 +303,10 @@ export default function JapaneseHubPage() {
                 <span className="font-display text-2xl">
                   <Ruby kanji={m.kanji} reading={m.reading} />
                 </span>
-                <h3 className="mt-3 font-body text-lg font-semibold">{m.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-sumi/60 dark:text-washi/60">{m.description}</p>
+                <h3 className="mt-3 font-body text-lg font-semibold">{t(m.titleKey, lang)}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-sumi/60 dark:text-washi/60">{t(m.descriptionKey, lang)}</p>
                 <span className="mt-4 inline-block font-mono text-[10px] uppercase tracking-widest text-sumi/40 dark:text-washi/40">
-                  Bientôt disponible
+                  {t("ja.soon", lang)}
                 </span>
               </div>
             )
@@ -316,7 +317,7 @@ export default function JapaneseHubPage() {
       {/* Guides / articles */}
       <section id="guides" className="scroll-mt-20 bg-white/40 py-20 dark:bg-white/[0.02]">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="font-display text-3xl">Guides & articles</h2>
+          <h2 className="font-display text-3xl">{t("ja.guidesTitle", lang)}</h2>
           <div className="mt-8 grid gap-5 md:grid-cols-3">
             {GUIDES.map((g) => {
               const body = (
@@ -327,32 +328,32 @@ export default function JapaneseHubPage() {
                     </span>
                     {!g.live && (
                       <span className="absolute right-3 top-3 rounded-full bg-washi/90 px-2.5 py-1 font-mono text-[10px] uppercase tracking-widest text-sumi">
-                        Bientôt
+                        {t("ja.guide.preparation", lang)}
                       </span>
                     )}
                   </div>
                   <div className="p-6">
                     <p className="font-mono text-[10px] uppercase tracking-widest text-sumi/50 dark:text-washi/50">
-                      {g.category}
+                      {t(g.categoryKey, lang)}
                     </p>
-                    <h3 className="mt-2 font-body text-base font-semibold leading-snug">{g.title}</h3>
-                    <p className="mt-2 text-sm leading-relaxed text-sumi/60 dark:text-washi/60">{g.excerpt}</p>
+                    <h3 className="mt-2 font-body text-base font-semibold leading-snug">{t(g.titleKey, lang)}</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-sumi/60 dark:text-washi/60">{t(g.excerptKey, lang)}</p>
                     <span className={`mt-4 inline-block text-xs font-medium ${g.live ? "text-ai" : "text-sumi/40 dark:text-washi/40"}`}>
-                      {g.live ? "Lire le guide →" : "En préparation"}
+                      {g.live ? t("ja.guide.lire", lang) : t("ja.guide.preparation", lang)}
                     </span>
                   </div>
                 </>
               );
               return g.href ? (
                 <Link
-                  key={g.title}
+                  key={g.titleKey}
                   href={g.href}
                   className="card-washi group overflow-hidden !p-0 transition-all hover:-translate-y-1 hover:shadow-md"
                 >
                   {body}
                 </Link>
               ) : (
-                <div key={g.title} className="card-washi cursor-not-allowed overflow-hidden opacity-70 !p-0">
+                <div key={g.titleKey} className="card-washi cursor-not-allowed overflow-hidden opacity-70 !p-0">
                   {body}
                 </div>
               );
@@ -363,25 +364,25 @@ export default function JapaneseHubPage() {
 
       {/* Témoignages */}
       <section className="mx-auto max-w-6xl px-6 py-20">
-        <h2 className="font-display text-3xl">Ils apprennent avec nous</h2>
+        <h2 className="font-display text-3xl">{t("ja.testimonialsTitle", lang)}</h2>
         <div className="mt-8 grid gap-5 md:grid-cols-3">
-          {TESTIMONIALS.map((t, i) => (
-            <figure key={t.name} className="card-washi relative p-7">
+          {TESTIMONIALS.map((x, i) => (
+            <figure key={x.name} className="card-washi relative p-7">
               {i === 1 && (
                 <span className="absolute -top-4 right-5 scale-[0.62]" aria-hidden>
                   <span className="hanko-stamp !h-[88px] !w-[88px]">合格</span>
                 </span>
               )}
               <blockquote className="text-sm leading-relaxed">
-                «&nbsp;{t.quote}&nbsp;»
+                «&nbsp;{t(x.quoteKey, lang)}&nbsp;»
               </blockquote>
               <figcaption className="mt-4 flex items-center gap-3">
                 <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sakura/30 font-display text-sm text-sakura-deep dark:text-sakura">
-                  {t.name.charAt(0)}
+                  {x.name.charAt(0)}
                 </span>
                 <span>
-                  <span className="block text-sm font-medium">{t.name}</span>
-                  <span className="block text-xs text-sumi/50 dark:text-washi/50">{t.context}</span>
+                  <span className="block text-sm font-medium">{x.name}</span>
+                  <span className="block text-xs text-sumi/50 dark:text-washi/50">{t(x.ctxKey, lang)}</span>
                 </span>
               </figcaption>
             </figure>
@@ -397,19 +398,18 @@ export default function JapaneseHubPage() {
           </span>
           <div className="relative">
             <h2 className="font-display text-3xl md:text-4xl">
-              Faites fleurir votre japonais
+              {t("ja.ctaFinalTitle", lang)}
             </h2>
             <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-washi/75">
-              Créez votre compte gratuit et faites vos premiers pas aujourd'hui —
-              le premier hiragana n'attend que vous.
+              {t("ja.ctaFinalSubtitle", lang)}
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <HeroCta
-                dashboardLabel="Retourner à mon espace"
-                guestLabel="Créer un compte gratuit"
+                dashboardLabel={t("ja.ctaDashboard", lang)}
+                guestLabel={t("ja.ctaCreate", lang)}
                 className="inline-flex items-center justify-center rounded-full bg-washi px-7 py-3 text-sm font-medium text-sumi transition-transform hover:scale-[1.03]"
                 guestSecondary={{
-                  label: "Se connecter",
+                  label: t("ja.ctaLogin", lang),
                   href: "/login",
                   className:
                     "inline-flex items-center justify-center rounded-full border border-washi/30 px-7 py-3 text-sm font-medium text-washi transition-colors hover:bg-washi/10",
