@@ -4,6 +4,9 @@ import { z } from "zod";
 const schema = z.object({
   text: z.string().min(1).max(800),
   voice: z.enum(["female", "male"]).optional().default("female"),
+  // Code de langue Google (tl) : "ja" (japonais) ou "en" (anglais). Les autres
+  // langues du site pourront être ajoutées en étendant cette énumération.
+  lang: z.enum(["ja", "en"]).optional().default("ja"),
 });
 
 // Googleroute : relais vers le moteur TTS de Google (voix japonaise naturelle) afin
@@ -22,10 +25,11 @@ export async function POST(request: Request) {
   const parsed = schema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Requête invalide." }, { status: 400 });
 
-  const { text, voice } = parsed.data;
+  const { text, voice, lang } = parsed.data;
 
   // Google limite chaque requête à ~200 caractères : on découpe en phrases sur les
-  // ponctuations et on concatène les petits MP3 générés.
+  // ponctuations et on concatène les petits MP3 générés. (La ponctuation japonaise
+  // et anglaise est couverte par le jeu de caractères ; inoffensif si inutile.)
   const sentences = text
     .split(/(?<=[。！？.!?])/)
     .map((s) => s.trim())
@@ -45,7 +49,7 @@ export async function POST(request: Request) {
   for (const chunk of chunks) {
     try {
       const url =
-        `${GOOGLE_TTS_URL}?ie=UTF-8&tl=ja&client=${TOKEN_OK}&ttsspeed=1&` +
+        `${GOOGLE_TTS_URL}?ie=UTF-8&tl=${lang}&client=${TOKEN_OK}&ttsspeed=1&` +
         `q=${encodeURIComponent(chunk)}`;
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), 12000);

@@ -1,14 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { speakJapanese } from "@/lib/tts";
+import { speak } from "@/lib/tts";
 
 export default function SpeakButton({
   text,
   label = "Écouter",
+  lang = "ja",
 }: {
   text: string;
   label?: string;
+  lang?: "ja" | "en";
 }) {
   const [playing, setPlaying] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -16,7 +18,7 @@ export default function SpeakButton({
   async function handlePlay() {
     setPlaying(true);
     try {
-      await speakJapanese(text);
+      await speak(text, lang);
     } catch {
       setFailed(true);
     } finally {

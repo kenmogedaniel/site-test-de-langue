@@ -4,7 +4,7 @@ import SiteFooter from "@/components/layout/SiteFooter";
 
 export const dynamic = "force-dynamic";
 
-export default async function JapaneseSectionLayout({ children }: { children: React.ReactNode }) {
+export default async function EnglishSectionLayout({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
   const {
     data: { user },
@@ -12,9 +12,9 @@ export default async function JapaneseSectionLayout({ children }: { children: Re
 
   return (
     <div className="min-h-screen">
-      <SiteHeader signedIn={!!user} />
+      <SiteHeader signedIn={!!user} lang="en" />
       {children}
-      <SiteFooter />
+      <SiteFooter lang="en" />
     </div>
   );
 }

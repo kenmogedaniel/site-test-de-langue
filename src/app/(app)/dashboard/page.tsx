@@ -3,8 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import Ruby from "@/components/ui/Ruby";
 import type { Difficulty } from "@/types/database";
 
-const MODES: { key: Difficulty; label: string; kanji: string; reading: string; color: string; hoverColor: string }[] = [
-  { key: "easy", label: "Facile — QCM", kanji: "易", reading: "やさ", color: "text-savane", hoverColor: "hover:text-savane" },
+export const dynamic = "force-dynamic";
+
+const MODES: { key: Difficulty; label: string; kanji: string; reading: string; color: string; hoverColor: string }[] = [  { key: "easy", label: "Facile — QCM", kanji: "易", reading: "やさ", color: "text-savane", hoverColor: "hover:text-savane" },
   { key: "medium", label: "Moyen — réponse libre", kanji: "中", reading: "ちゅう", color: "text-ai", hoverColor: "hover:text-ai" },
   { key: "hard", label: "Difficile — structuré", kanji: "難", reading: "むずか", color: "text-hanko", hoverColor: "hover:text-hanko" },
 ];

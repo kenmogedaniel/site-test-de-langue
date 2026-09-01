@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import AppHeader from "@/components/layout/AppHeader";
 import AudioUnlock from "@/components/layout/AudioUnlock";
 
+export const dynamic = "force-dynamic";
+
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
   const {

@@ -5,6 +5,8 @@ import TrainingClient from "./TrainingClient";
 import ModeChoice from "./ModeChoice";
 import type { Difficulty } from "@/types/database";
 
+export const dynamic = "force-dynamic";
+
 const VALID_MODES: Difficulty[] = ["easy", "medium", "hard"];
 
 export default async function TrainPage({

@@ -36,6 +36,8 @@ const plexMono = localFont({
   display: "swap",
 });
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Kadoya — Apprentissage des langues",
   description:

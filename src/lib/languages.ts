@@ -12,7 +12,7 @@ export interface Language {
 
 export const LANGUAGES: Language[] = [
   { code: "ja", flag: "jp", name: "Japonais", native: "日本語", reading: "にほんご", active: true },
-  { code: "en", flag: "gb", name: "Anglais", native: "English", active: false },
+  { code: "en", flag: "gb", name: "Anglais", native: "English", active: true },
   { code: "ko", flag: "kr", name: "Coréen", native: "한국어", active: false },
   { code: "es", flag: "es", name: "Espagnol", native: "Español", active: false },
   { code: "de", flag: "de", name: "Allemand", native: "Deutsch", active: false },

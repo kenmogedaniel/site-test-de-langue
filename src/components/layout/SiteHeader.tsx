@@ -4,11 +4,22 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { LANGUAGES } from "@/lib/languages";
 import Flag from "@/components/ui/Flag";
+import { t, type InterfaceLang } from "@/lib/uiTranslations";
 
-export default function SiteHeader({ signedIn = false }: { signedIn?: boolean }) {
+export default function SiteHeader({
+  signedIn = false,
+  lang = "ja",
+  interfaceLang = "fr",
+}: {
+  signedIn?: boolean;
+  lang?: string;
+  interfaceLang?: InterfaceLang;
+}) {
   const [langOpen, setLangOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
+
+  const activeLang = LANGUAGES.find((l) => l.code === lang) ?? LANGUAGES.find((l) => l.active)!;
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -31,10 +42,12 @@ export default function SiteHeader({ signedIn = false }: { signedIn?: boolean })
   }, []);
 
   const navLinks = [
-    { href: "/", label: "Langues" },
-    { href: "/ja/lecons", label: "Leçons" },
-    { href: "/ja#fonctionnalites", label: "Fonctionnalités" },
-    { href: "/ja#guides", label: "Guides" },
+    { href: "/", label: t("nav.langues", interfaceLang) },
+    { href: `/${lang}/lecons`, label: t("nav.lecons", interfaceLang) },
+    { href: `/${lang}#fonctionnalites`, label: t("nav.fonctionnalites", interfaceLang) },
+    ...(lang === "ja"
+      ? [{ href: `/${lang}#guides`, label: t("nav.guides", interfaceLang) }]
+      : []),
   ];
 
   return (
@@ -49,7 +62,7 @@ export default function SiteHeader({ signedIn = false }: { signedIn?: boolean })
             </svg>
             Kadoya
             <span className="hidden text-[11px] font-body font-normal uppercase tracking-widest text-sumi/40 dark:text-washi/40 sm:inline">
-              langues
+              {t("header.tagline", interfaceLang)}
             </span>
           </span>
         </Link>
@@ -82,8 +95,8 @@ export default function SiteHeader({ signedIn = false }: { signedIn?: boolean })
                 <circle cx="12" cy="12" r="10" />
                 <path d="M2 12h20M12 2c2.5 2.7 4 6.1 4 10s-1.5 7.3-4 10c-2.5-2.7-4-6.1-4-10s1.5-7.3 4-10z" />
               </svg>
-              <Flag code="jp" country="Japonais" size={16} />
-              <span className="hidden sm:inline">Japonais</span>
+              <Flag code={activeLang.flag} country={activeLang.name} size={16} />
+              <span className="hidden sm:inline">{activeLang.name}</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`h-3.5 w-3.5 text-sumi/50 transition-transform dark:text-washi/50 ${langOpen ? "rotate-180" : ""}`}>
                 <path d="M19 9l-7 7-7-7" />
               </svg>
@@ -92,14 +105,14 @@ export default function SiteHeader({ signedIn = false }: { signedIn?: boolean })
             {langOpen && (
               <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-sumi/10 bg-white p-2 shadow-xl dark:border-washi/10 dark:bg-[#1d2026]">
                 <p className="px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-sumi/40 dark:text-washi/40">
-                  Langue à apprendre
+                  {t("header.langueToLearn", interfaceLang)}
                 </p>
                 <ul className="max-h-80 overflow-y-auto">
                   {LANGUAGES.map((l) =>
                     l.active ? (
                       <li key={l.code}>
                         <Link
-                          href="/ja"
+                          href={`/${l.code}`}
                           onClick={() => setLangOpen(false)}
                           className="flex items-center justify-between rounded-xl bg-sakura/15 px-3 py-2 text-sm"
                         >
@@ -109,7 +122,7 @@ export default function SiteHeader({ signedIn = false }: { signedIn?: boolean })
                             <span className="text-sumi/50 dark:text-washi/50">{l.name}</span>
                           </span>
                           <span className="rounded-full bg-ai px-2 py-0.5 text-[10px] font-medium text-washi">
-                            Actif
+                            {t("header.actif", interfaceLang)}
                           </span>
                         </Link>
                       </li>
@@ -117,14 +130,14 @@ export default function SiteHeader({ signedIn = false }: { signedIn?: boolean })
                       <li key={l.code}>
                         <span
                           className="flex cursor-not-allowed items-center justify-between rounded-xl px-3 py-2 text-sm opacity-45"
-                          title="Bientôt disponible"
+                          title={t("header.bientot", interfaceLang)}
                         >
                           <span className="flex items-center gap-3">
                             <Flag code={l.flag} country={l.name} />
                             <span>{l.native}</span>
                             <span className="text-sumi/50 dark:text-washi/50">{l.name}</span>
                           </span>
-                          <span className="text-[10px] font-mono uppercase tracking-widest">Bientôt</span>
+                          <span className="text-[10px] font-mono uppercase tracking-widest">{t("header.bientot", interfaceLang)}</span>
                         </span>
                       </li>
                     )
@@ -136,7 +149,7 @@ export default function SiteHeader({ signedIn = false }: { signedIn?: boolean })
 
           {signedIn ? (
             <Link href="/dashboard" className="btn-primary hidden !px-5 !py-2 text-sm sm:inline-flex">
-              Mon espace
+              {t("header.monEspace", interfaceLang)}
             </Link>
           ) : (
             <>
@@ -144,10 +157,10 @@ export default function SiteHeader({ signedIn = false }: { signedIn?: boolean })
                 href="/login"
                 className="hidden rounded-full px-3 py-2 text-sm text-sumi/70 transition-colors hover:text-ai dark:text-washi/70 dark:hover:text-sakura sm:inline-block"
               >
-                Se connecter
+                {t("header.seConnecter", interfaceLang)}
               </Link>
               <Link href="/signup" className="btn-primary hidden !px-5 !py-2 text-sm sm:inline-flex">
-                Commencer
+                {t("header.commencer", interfaceLang)}
               </Link>
             </>
           )}
@@ -157,7 +170,7 @@ export default function SiteHeader({ signedIn = false }: { signedIn?: boolean })
             className="rounded-full p-2 hover:bg-sumi/5 md:hidden dark:hover:bg-washi/5"
             onClick={() => setMenuOpen((v) => !v)}
             aria-expanded={menuOpen}
-            aria-label="Menu"
+            aria-label={t("header.menu", interfaceLang)}
           >
             {menuOpen ? (
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="h-5 w-5">
@@ -188,15 +201,15 @@ export default function SiteHeader({ signedIn = false }: { signedIn?: boolean })
             <hr className="my-2 border-sumi/10 dark:border-washi/10" />
             {signedIn ? (
               <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="rounded-xl px-3 py-2.5 hover:bg-sumi/5 dark:hover:bg-washi/5">
-                Mon espace
+                {t("header.monEspace", interfaceLang)}
               </Link>
             ) : (
               <>
                 <Link href="/login" onClick={() => setMenuOpen(false)} className="rounded-xl px-3 py-2.5 hover:bg-sumi/5 dark:hover:bg-washi/5">
-                  Se connecter
+                  {t("header.seConnecter", interfaceLang)}
                 </Link>
                 <Link href="/signup" onClick={() => setMenuOpen(false)} className="mt-1 rounded-full bg-ai px-3 py-2.5 text-center font-medium text-washi">
-                  Créer un compte gratuit
+                  {t("header.creerCompte", interfaceLang)}
                 </Link>
               </>
             )}

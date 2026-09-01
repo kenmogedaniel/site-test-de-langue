@@ -160,7 +160,11 @@ function playBlobAudioMale(blob: Blob, rate = 0.9): Promise<void> {
 
 /** Priorité 1 : moteur TTS de Google via la route serveur. Retourne false si on doit
  *  basculer sur la Web Speech API (réseau, erreur serveur, timeout, etc.). */
-async function speakViaServer(text: string, voicePreference: VoicePref): Promise<boolean> {
+async function speakViaServer(
+  text: string,
+  voicePreference: VoicePref,
+  lang: "ja" | "en" = "ja"
+): Promise<boolean> {
   let controller: AbortController | null = null;
   try {
     controller = new AbortController();
@@ -168,7 +172,7 @@ async function speakViaServer(text: string, voicePreference: VoicePref): Promise
     const res = await fetch("/api/tts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text, voice: voicePreference }),
+      body: JSON.stringify({ text, voice: voicePreference, lang }),
       signal: controller.signal,
     });
     clearTimeout(timer);
@@ -191,31 +195,42 @@ async function speakViaServer(text: string, voicePreference: VoicePref): Promise
  * Secours : Web Speech API
  * ------------------------------------------------------------------------- */
 
-function pickJapaneseVoice(
+/** Sélectionne une voix du navigateur pour la langue donnée (préfixe BCP-47, ex. "ja", "en").
+ *  Privilégie une voix dont le nom correspond aux indices Homme/Femme ; sinon sépare les
+ *  voix disponibles pour proposer deux intonations (graves vs aiguës). */
+function pickVoice(
   voices: SpeechSynthesisVoice[],
+  lang: string,
   preference: VoicePref
 ): { voice: SpeechSynthesisVoice | null; distinct: boolean } {
-  const jaVoices = voices.filter((v) => v.lang?.toLowerCase().startsWith("ja"));
-  if (jaVoices.length === 0) return { voice: null, distinct: false };
+  const langVoices = voices.filter((v) => v.lang?.toLowerCase().startsWith(lang.toLowerCase()));
+  if (langVoices.length === 0) return { voice: null, distinct: false };
 
   const hints = preference === "male" ? MALE_VOICE_HINTS : FEMALE_VOICE_HINTS;
   const otherHints = preference === "male" ? FEMALE_VOICE_HINTS : MALE_VOICE_HINTS;
 
   const byName = (list: string[]) =>
-    jaVoices.find((v) => list.some((h) => v.name.toLowerCase().includes(h)));
+    langVoices.find((v) => list.some((h) => v.name.toLowerCase().includes(h)));
 
   const matched = byName(hints);
   if (matched) return { voice: matched, distinct: true };
 
-  if (jaVoices.length > 1) {
-    const sorted = [...jaVoices].sort((a, b) => a.name.localeCompare(b.name));
+  if (langVoices.length > 1) {
+    const sorted = [...langVoices].sort((a, b) => a.name.localeCompare(b.name));
     const other = byName(otherHints);
     const pool = other ? sorted.filter((v) => v !== other) : sorted;
     const index = preference === "male" ? pool.length - 1 : 0;
     return { voice: pool[index] ?? sorted[0], distinct: true };
   }
 
-  return { voice: jaVoices[0], distinct: false };
+  return { voice: langVoices[0], distinct: false };
+}
+
+function pickJapaneseVoice(
+  voices: SpeechSynthesisVoice[],
+  preference: VoicePref
+): { voice: SpeechSynthesisVoice | null; distinct: boolean } {
+  return pickVoice(voices, "ja", preference);
 }
 
 export function ensureVoicesLoaded(): Promise<SpeechSynthesisVoice[]> {
@@ -238,14 +253,19 @@ export function ensureVoicesLoaded(): Promise<SpeechSynthesisVoice[]> {
 }
 
 function splitIntoSentences(text: string): string[] {
-  const parts = text.split(/(?<=[。！？])/).map((s) => s.trim()).filter(Boolean);
+  const parts = text.split(/(?<=[。！？.!?])/).map((s) => s.trim()).filter(Boolean);
   return parts.length > 0 ? parts : [text];
 }
 
-function speakOne(text: string, voice: SpeechSynthesisVoice | null, pitch: number): Promise<void> {
+function speakOne(
+  text: string,
+  voice: SpeechSynthesisVoice | null,
+  pitch: number,
+  lang: string
+): Promise<void> {
   return new Promise((resolve, reject) => {
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "ja-JP";
+    utterance.lang = lang;
     utterance.rate = 0.95;
     utterance.pitch = pitch;
     if (voice) utterance.voice = voice;
@@ -256,13 +276,18 @@ function speakOne(text: string, voice: SpeechSynthesisVoice | null, pitch: numbe
 }
 
 /** Priorité 2 : Web Speech API du navigateur (secours). */
-async function speakViaWebSpeech(text: string, voicePreference: VoicePref): Promise<void> {
+async function speakViaWebSpeech(
+  text: string,
+  voicePreference: VoicePref,
+  lang: string = "ja-JP"
+): Promise<void> {
   if (typeof window === "undefined" || !window.speechSynthesis) {
     throw new Error("La synthèse vocale n'est pas disponible sur ce navigateur.");
   }
 
   const voices = await ensureVoicesLoaded();
-  const { voice, distinct } = pickJapaneseVoice(voices, voicePreference);
+  const tag = lang.split("-")[0];
+  const { voice, distinct } = pickVoice(voices, tag, voicePreference);
   const android = isAndroid();
   const pitch = !distinct && !android ? (voicePreference === "male" ? 0.92 : 1.08) : 1;
 
@@ -271,13 +296,33 @@ async function speakViaWebSpeech(text: string, voicePreference: VoicePref): Prom
 
   const sentences = splitIntoSentences(text);
   for (const sentence of sentences) {
-    await speakOne(sentence, voice, pitch);
+    await speakOne(sentence, voice, pitch, lang);
   }
 }
 
 /* ---------------------------------------------------------------------------
  * API publique
  * ------------------------------------------------------------------------- */
+
+/** Lit un texte à voix haute dans la langue demandée ("ja" ou "en").
+ *  Utilise le moteur TTS de Google via la route `/api/tts` (bonne qualité, même sur
+ *  mobile). La voix « Homme » est obtenue en abaissant la hauteur de la voix féminine
+ *  de Google (pitch-shift). Bascule sur la Web Speech API du navigateur si le serveur
+ *  est indisponible, trop lent ou hors ligne. */
+export async function speak(
+  text: string,
+  lang: "ja" | "en" = "ja",
+  voicePreference: VoicePref = "female"
+): Promise<void> {
+  // Annule toute lecture en cours (Web Speech ou Audio serveur) pour éviter les chevauchements.
+  window.speechSynthesis?.cancel();
+  stopServerAudioNow();
+  const speechLang = lang === "en" ? "en-US" : "ja-JP";
+  const played = await speakViaServer(text, voicePreference, lang);
+  if (!played) {
+    await speakViaWebSpeech(text, voicePreference, speechLang);
+  }
+}
 
 /**
  * Lit un texte japonais à voix haute. Utilise le moteur TTS de Google via la route
@@ -287,13 +332,12 @@ async function speakViaWebSpeech(text: string, voicePreference: VoicePref): Prom
  * le serveur est indisponible, trop lent ou hors ligne.
  */
 export async function speakJapanese(text: string, voicePreference: VoicePref = "female"): Promise<void> {
-  // Annule toute lecture en cours (Web Speech ou Audio serveur) pour éviter les chevauchements.
-  window.speechSynthesis?.cancel();
-  stopServerAudioNow();
-  const played = await speakViaServer(text, voicePreference);
-  if (!played) {
-    await speakViaWebSpeech(text, voicePreference);
-  }
+  await speak(text, "ja", voicePreference);
+}
+
+/** Lit un texte anglais à voix haute (voir `speak`). */
+export async function speakEnglish(text: string, voicePreference: VoicePref = "female"): Promise<void> {
+  await speak(text, "en", voicePreference);
 }
 
 /** Indique si au moins deux voix japonaises distinctes sont installées sur cet appareil. */

@@ -5,6 +5,8 @@ import PhoneMockup from "@/components/ui/PhoneMockup";
 import FeatureCard from "@/components/ui/FeatureCard";
 import Ruby from "@/components/ui/Ruby";
 
+export const dynamic = "force-dynamic";
+
 interface Module {
   kanji: string;
   reading: string;
