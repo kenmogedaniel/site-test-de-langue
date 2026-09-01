@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import type { Exercise } from "@/lib/minnaExtras";
+import type { InterfaceLang } from "@/lib/uiTranslations";
 
 function normalize(s: string): string {
   return s.trim().replace(/\s+/g, "").toLowerCase();
 }
 
-function OneExercise({ ex, n }: { ex: Exercise; n: number }) {
+function OneExercise({ ex, n, lang }: { ex: Exercise; n: number; lang: InterfaceLang }) {
   const [choice, setChoice] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [checked, setChecked] = useState(false);
@@ -15,12 +16,14 @@ function OneExercise({ ex, n }: { ex: Exercise; n: number }) {
   const isQcm = Array.isArray(ex.options) && ex.options.length > 0;
   const answer = isQcm ? choice ?? "" : input;
   const correct = ex.accept.some((a) => normalize(a) === normalize(answer));
+  const prompt = lang === "en" ? ex.promptEn : ex.prompt;
+  const explain = lang === "en" ? ex.explainEn : ex.explain;
 
   return (
     <li className="rounded-2xl border border-sumi/10 p-5 dark:border-washi/10">
       <p className="text-sm leading-relaxed">
         <span className="mr-2 font-mono text-xs text-sumi/40 dark:text-washi/40">{n}.</span>
-        {ex.prompt}
+        {prompt}
       </p>
 
       {isQcm ? (
@@ -48,7 +51,7 @@ function OneExercise({ ex, n }: { ex: Exercise; n: number }) {
           disabled={checked}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && setChecked(true)}
-          placeholder="Votre réponse…"
+          placeholder={lang === "en" ? "Your answer…" : "Votre réponse…"}
           className="mt-3 w-full max-w-xs rounded-xl border border-sumi/20 bg-transparent px-4 py-2 text-sm outline-none focus:border-ai dark:border-washi/20"
         />
       )}
@@ -61,7 +64,7 @@ function OneExercise({ ex, n }: { ex: Exercise; n: number }) {
             disabled={!answer.trim()}
             className="btn-secondary !px-4 !py-1.5 text-xs disabled:opacity-50"
           >
-            Vérifier
+            {lang === "en" ? "Check" : "Vérifier"}
           </button>
         ) : (
           <span className={`text-sm font-medium ${correct ? "text-bamboo" : "text-hanko"}`}>
@@ -70,7 +73,8 @@ function OneExercise({ ex, n }: { ex: Exercise; n: number }) {
         )}
         {checked && (
           <span className="text-xs leading-relaxed text-sumi/55 dark:text-washi/55">
-            Réponse : <span className="font-medium text-sumi dark:text-washi">{ex.accept[0]}</span> — {ex.explain}
+            {lang === "en" ? "Answer:" : "Réponse :"}{" "}
+            <span className="font-medium text-sumi dark:text-washi">{ex.accept[0]}</span> — {explain}
           </span>
         )}
       </div>
@@ -78,11 +82,11 @@ function OneExercise({ ex, n }: { ex: Exercise; n: number }) {
   );
 }
 
-export default function ExerciseBlock({ exercises }: { exercises: Exercise[] }) {
+export default function ExerciseBlock({ exercises, lang }: { exercises: Exercise[]; lang: InterfaceLang }) {
   return (
     <ol className="space-y-4">
       {exercises.map((ex, i) => (
-        <OneExercise key={i} ex={ex} n={i + 1} />
+        <OneExercise key={i} ex={ex} n={i + 1} lang={lang} />
       ))}
     </ol>
   );

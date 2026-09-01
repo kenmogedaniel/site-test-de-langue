@@ -330,6 +330,86 @@ export const UI: Record<string, Entry> = {
     fr: "Les 46 sons de base de l'écriture japonaise. Cliquez sur un caractère pour l'entendre, puis testez-vous une fois à l'aise.",
     en: "The 46 basic sounds of Japanese writing. Click a character to hear it, then test yourself once you're comfortable.",
   },
+
+  // --- Kanji hub (ja/kanji) ---
+  "kanji.eyebrow": { fr: "Apprendre les kanji", en: "Learning kanji" },
+  "kanji.intro": {
+    fr: "{n} kanji de base (niveau JLPT N5), groupés par thème. Chaque kanji comprend ses lectures on/kun, des mots d'exemple et un mnémonique pour le retenir.",
+    en: "{n} basic kanji (JLPT N5 level), grouped by theme. Each kanji includes its on/kun readings, example words and a mnemonic to remember it.",
+  },
+  "kanji.levelBadge": { fr: "Niveau N5 — débutant", en: "N5 level — beginner" },
+  "kanji.traits": { fr: "traits", en: "strokes" },
+
+  // --- Kanji detail (ja/kanji/[slug]) ---
+  "kanji.breadcrumbJa": { fr: "Japonais", en: "Japanese" },
+  "kanji.onReading": { fr: "Lecture on", en: "On reading" },
+  "kanji.kunReading": { fr: "Lecture kun", en: "Kun reading" },
+  "kanji.mnemonic": { fr: "Mnémonique", en: "Mnemonic" },
+  "kanji.examplesTitle": { fr: "Mots avec ce kanji", en: "Words with this kanji" },
+  "kanji.strokeTitle": { fr: "Ordre des traits — {n} traits", en: "Stroke order — {n} strokes" },
+  "kanji.strokeFirst": { fr: "1er trait", en: "1st stroke" },
+  "kanji.strokeNth": { fr: "trait {n}", en: "stroke {n}" },
+  "kanji.rulesTitle": { fr: "Règles universelles", en: "Universal rules" },
+  "kanji.rulesBody": {
+    fr: "Haut → Bas, Gauche → Droite, Horizontal avant Vertical. La boucle et le crochet se font toujours en dernier. Appliquez ces règles dans l'ordre indiqué par les numéros pour former ce kanji correctement.",
+    en: "Top → Bottom, Left → Right, Horizontal before Vertical. The loop and hook are always done last. Apply these rules in the order shown by the numbers to form this kanji correctly.",
+  },
+  "kanji.practiceTitle": { fr: "S'entraîner à tracer {kanji}", en: "Practice tracing {kanji}" },
+  "kanji.backToKanji": { fr: "Retour aux kanji", en: "Back to kanji" },
+
+  // --- Leçons hub (ja/lecons) ---
+  "lecons.eyebrow": { fr: "Parcours guidés", en: "Guided track" },
+  "lecons.intro": {
+    fr: "Apprenez à lire les kana ligne par ligne, puis construisez vos premières phrases avec un cours structuré en 25 leçons — chaque mot et chaque exemple se lisent à voix haute.",
+    en: "Learn to read kana line by line, then build your first sentences with a structured 25-lesson course — every word and example is read aloud.",
+  },
+  "lecons.nb": { fr: "leçons", en: "lessons" },
+  "lecons.startTrack": { fr: "Commencer ce parcours →", en: "Start this track →" },
+  "lecons.kanaTitle": { fr: "Les syllabaires", en: "The syllabaries" },
+  "lecons.kanaIntro": {
+    fr: "Une ligne à la fois : traits de plume, astuces de reconnaissance et mots d'entraînement qui n'utilisent que les kana déjà appris.",
+    en: "One line at a time: brush strokes, recognition tips and practice words using only the kana you've already learned.",
+  },
+  "lecons.hiraganaSub": { fr: "Le syllabaire natif, la base de tout.", en: "The native syllabary, the foundation of everything." },
+  "lecons.katakanaSub": { fr: "Pour les mots étrangers et les noms propres.", en: "For foreign words and proper names." },
+  "lecons.coursTitle": { fr: "Le cours en 25 leçons", en: "The 25-lesson course" },
+  "lecons.coursIntro": {
+    fr: "La progression canonique du japonais débutant (dans l'esprit des manuels classiques comme Minna no Nihongo) : grammaire expliquée simplement, exemples audio et vocabulaire essentiel par leçon.",
+    en: "The canonical beginner Japanese progression (in the spirit of classic textbooks like Minna no Nihongo): grammar explained simply, audio examples and essential vocabulary per lesson.",
+  },
+  "lecons.lessonNumber": { fr: "Leçon", en: "Lesson" },
+  "lecons.audioTitle": { fr: "Audio officiel gratuit", en: "Free official audio" },
+  "lecons.audioDesc": {
+    fr: "L'éditeur 3A Corporation met gratuitement à disposition les enregistrements MP3 officiels des 25 leçons de Minna no Nihongo Shokyu I (2e édition) sur son site.",
+    en: "Publisher 3A Corporation freely provides the official MP3 recordings of the 25 lessons of Minna no Nihongo Shokyu I (2nd edition) on its website.",
+  },
+  "lecons.audioLink": { fr: "Écouter sur 3anet.co.jp →", en: "Listen on 3anet.co.jp →" },
+  "lecons.open": { fr: "Ouvrir la leçon →", en: "Open the lesson →" },
+
+  // --- Leçons anglais hub (en/lecons) ---
+  "enlec.title": { fr: "Leçons d'anglais", en: "English lessons" },
+  "enlec.intro": {
+    fr: "Un parcours débutant en dix leçons : grammaire expliquée simplement, vocabulaire essentiel et phrases d'exemple lues à voix haute en anglais.",
+    en: "A beginner path in ten lessons: grammar explained simply, essential vocabulary and example sentences read aloud in English.",
+  },
+
+  // --- Leçon détail (ja/lecons/[slug], en/lecons/[slug]) ---
+  "lesson.breadcrumbJa": { fr: "Japonais", en: "Japanese" },
+  "lesson.breadcrumbLecons": { fr: "Leçons", en: "Lessons" },
+  "lesson.breadcrumbEn": { fr: "Anglais", en: "English" },
+  "lesson.kanaTitle": { fr: "Les kana de cette ligne", en: "The kana in this row" },
+  "lesson.trait": { fr: "trait", en: "stroke" },
+  "lesson.traits": { fr: "traits", en: "strokes" },
+  "lesson.wordsTitle": { fr: "Mots d'entraînement", en: "Practice words" },
+  "lesson.grammarTitle": { fr: "Points de grammaire", en: "Grammar points" },
+  "lesson.examplesTitle": { fr: "Exemples", en: "Examples" },
+  "lesson.vocabTitle": { fr: "Vocabulaire", en: "Vocabulary" },
+  "lesson.exercisesTitle": { fr: "Exercices", en: "Exercises" },
+  "lesson.dialogue.scene": { fr: "Dialogue — {scene}", en: "Dialogue — {scene}" },
+  "lesson.prev": { fr: "← Leçon précédente", en: "← Previous lesson" },
+  "lesson.next": { fr: "Leçon suivante →", en: "Next lesson →" },
+  "lesson.backToLessons": { fr: "Retour aux leçons", en: "Back to lessons" },
+  "lesson.openLesson": { fr: "Ouvrir la leçon →", en: "Open the lesson →" },
 };
 
 /** Renvoie le texte d'interface pour la langue demandée, avec remplacement {tokens}. */

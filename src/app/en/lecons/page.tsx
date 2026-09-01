@@ -1,17 +1,28 @@
 import Link from "next/link";
 import { ENGLISH_LESSONS } from "@/lib/englishLessons";
+import LanguageToggle from "@/components/ui/LanguageToggle";
+import { t, type InterfaceLang } from "@/lib/uiTranslations";
 
-export default function EnglishLessonsHubPage() {
+export default function EnglishLessonsHubPage({
+  searchParams,
+}: {
+  searchParams: { ui?: string };
+}) {
+  const lang: InterfaceLang = searchParams.ui === "en" ? "en" : "fr";
+  const uid = `?ui=${lang}`;
+
   return (
     <main>
       <section className="mx-auto max-w-6xl px-6 pt-14 pb-4">
-        <p className="font-mono text-xs uppercase tracking-widest text-sumi/50 dark:text-washi/50">
-          Parcours guidés
-        </p>
-        <h1 className="mt-2 font-display text-4xl md:text-5xl">Leçons d'anglais</h1>
+        <div className="flex items-center justify-between">
+          <p className="font-mono text-xs uppercase tracking-widest text-sumi/50 dark:text-washi/50">
+            {t("lecons.eyebrow", lang)}
+          </p>
+          <LanguageToggle lang={lang} />
+        </div>
+        <h1 className="mt-2 font-display text-4xl md:text-5xl">{t("enlec.title", lang)}</h1>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-sumi/60 dark:text-washi/60">
-          Un parcours débutant en dix leçons : grammaire expliquée simplement,
-          vocabulaire essentiel et phrases d'exemple lues à voix haute en anglais.
+          {t("enlec.intro", lang)}
         </p>
       </section>
 
@@ -20,17 +31,17 @@ export default function EnglishLessonsHubPage() {
           {ENGLISH_LESSONS.map((lesson) => (
             <Link
               key={lesson.slug}
-              href={`/en/lecons/${lesson.slug}`}
+              href={`/en/lecons/${lesson.slug}${uid}`}
               className="card-washi group flex flex-col p-6 transition-all hover:-translate-y-0.5 hover:border-ai/40 hover:shadow-md"
             >
               <span className="font-mono text-[10px] uppercase tracking-widest text-sumi/40 dark:text-washi/40">
-                Leçon {String(lesson.number).padStart(2, "0")}
+                {t("en.lessonNumber", lang)} {String(lesson.number).padStart(2, "0")}
               </span>
               <h3 className="mt-1.5 font-body font-semibold transition-colors group-hover:text-ai">
-                {lesson.title}
+                {lang === "en" ? lesson.titleEn : lesson.title}
               </h3>
               <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-sumi/55 dark:text-washi/55">
-                {lesson.summary}
+                {lang === "en" ? lesson.summaryEn : lesson.summary}
               </p>
               <div className="mt-3 flex flex-wrap gap-1">
                 {lesson.grammar.slice(0, 2).map((g) => (
@@ -40,7 +51,7 @@ export default function EnglishLessonsHubPage() {
                 ))}
               </div>
               <span className="mt-4 inline-block text-xs font-medium text-ai">
-                Ouvrir la leçon →
+                {t("lecons.open", lang)}
               </span>
             </Link>
           ))}

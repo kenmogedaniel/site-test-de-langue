@@ -1,24 +1,32 @@
 import Link from "next/link";
 import { N5_KANJI_GROUPS } from "@/lib/kanjiData";
+import LanguageToggle from "@/components/ui/LanguageToggle";
+import { t, type InterfaceLang } from "@/lib/uiTranslations";
 
-export default function KanjiHubPage() {
+export default function KanjiHubPage({
+  searchParams,
+}: {
+  searchParams: { ui?: string };
+}) {
+  const lang: InterfaceLang = searchParams.ui === "en" ? "en" : "fr";
   const totalKanji = N5_KANJI_GROUPS.reduce((n, g) => n + g.kanji.length, 0);
 
   return (
     <main>
       <section className="mx-auto max-w-6xl px-6 pt-14 pb-4">
-        <p className="font-mono text-xs uppercase tracking-widest text-sumi/50 dark:text-washi/50">
-          Apprendre les kanji
-        </p>
+        <div className="flex items-center justify-between">
+          <p className="font-mono text-xs uppercase tracking-widest text-sumi/50 dark:text-washi/50">
+            {t("kanji.eyebrow", lang)}
+          </p>
+          <LanguageToggle lang={lang} />
+        </div>
         <h1 className="mt-2 font-display text-4xl md:text-5xl">Kanji</h1>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-sumi/60 dark:text-washi/60">
-          {totalKanji} kanji de base (niveau JLPT N5), groupés par thème. Chaque kanji
-          comprend ses lectures on/kun, des mots d'exemple et un mnémonique pour
-          le retenir.
+          {t("kanji.intro", lang).replace("{n}", String(totalKanji))}
         </p>
         <div className="mt-4 flex items-center gap-4 text-xs text-sumi/50 dark:text-washi/50">
           <span className="rounded-full bg-ai/10 px-3 py-1 text-ai">{totalKanji} kanji</span>
-          <span>Niveau N5 — débutant</span>
+          <span>{t("kanji.levelBadge", lang)}</span>
         </div>
       </section>
 
@@ -30,8 +38,10 @@ export default function KanjiHubPage() {
                 {group.kanji[0].kanji}
               </span>
               <div>
-                <h2 className="font-display text-xl">{group.group}</h2>
-                <p className="mt-0.5 text-xs text-sumi/55 dark:text-washi/55">{group.description}</p>
+                <h2 className="font-display text-xl">{lang === "en" ? group.groupEn : group.group}</h2>
+                <p className="mt-0.5 text-xs text-sumi/55 dark:text-washi/55">
+                  {lang === "en" ? group.descriptionEn : group.description}
+                </p>
               </div>
             </div>
 
@@ -39,17 +49,17 @@ export default function KanjiHubPage() {
               {group.kanji.map((kanji) => (
                 <Link
                   key={kanji.slug}
-                  href={`/ja/kanji/${kanji.slug}`}
+                  href={`/ja/kanji/${kanji.slug}?ui=${lang}`}
                   className="card-washi group flex flex-col items-center p-4 transition-all hover:-translate-y-0.5 hover:border-ai/40 hover:shadow-md"
                 >
                   <span className="font-display text-4xl leading-none transition-colors group-hover:text-ai">
                     {kanji.kanji}
                   </span>
                   <span className="mt-2 font-mono text-xs text-sumi/50 dark:text-washi/50">
-                    {kanji.strokeCount} traits
+                    {kanji.strokeCount} {t("kanji.traits", lang)}
                   </span>
                   <span className="mt-1.5 text-center text-[11px] leading-snug text-sumi/70 dark:text-washi/70">
-                    {kanji.frMeaning}
+                    {lang === "en" ? kanji.enMeaning : kanji.frMeaning}
                   </span>
                   <span className="mt-1.5 truncate text-center text-[10px] text-sumi/45 dark:text-washi/45">
                     {kanji.onReading.join(" / ")}

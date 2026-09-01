@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type { InterfaceLang } from "@/lib/uiTranslations";
 
 /**
  * Zone de dessin pour s'entraîner à tracer un caractère japonais, à la souris sur
@@ -11,13 +12,14 @@ import { useEffect, useRef, useState } from "react";
  * Le caractère est affiché en fond, très pâle, comme guide de calque (comme les
  * cahiers d'écriture japonais). « Effacer » réinitialise le tracé sans perdre le guide.
  */
-export default function DrawingCanvas({ character }: { character: string }) {
+export default function DrawingCanvas({ character, lang }: { character: string; lang: InterfaceLang }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const drawingRef = useRef(false);
   const lastPointRef = useRef<{ x: number; y: number } | null>(null);
   const [hasDrawn, setHasDrawn] = useState(false);
   const [showGuide, setShowGuide] = useState(true);
+  const isEn = lang === "en";
 
   const SIZE = 280; // taille logique en pixels CSS (le canvas interne est mis à l'échelle pour la netteté)
 
@@ -117,7 +119,7 @@ export default function DrawingCanvas({ character }: { character: string }) {
   return (
     <div className="card-washi p-6">
       <div className="flex items-center justify-between mb-4">
-        <p className="text-sm font-medium">S'entraîner à tracer</p>
+        <p className="text-sm font-medium">{isEn ? "Practice tracing" : "S'entraîner à tracer"}</p>
         <label className="flex items-center gap-2 text-xs text-sumi/60 dark:text-washi/60">
           <input
             type="checkbox"
@@ -125,7 +127,7 @@ export default function DrawingCanvas({ character }: { character: string }) {
             onChange={(e) => setShowGuide(e.target.checked)}
             className="accent-ai"
           />
-          Afficher le modèle
+          {isEn ? "Show guide" : "Afficher le modèle"}
         </label>
       </div>
 
@@ -143,11 +145,11 @@ export default function DrawingCanvas({ character }: { character: string }) {
 
       <div className="flex items-center justify-center gap-3 mt-4">
         <button onClick={handleClear} disabled={!hasDrawn} className="btn-secondary !px-4 !py-2 text-sm disabled:opacity-40">
-          ↺ Effacer
+          ↺ {isEn ? "Clear" : "Effacer"}
         </button>
       </div>
       <p className="text-xs text-center text-sumi/40 dark:text-washi/40 mt-3">
-        À la souris sur ordinateur, au doigt sur mobile/tablette.
+        {isEn ? "With your mouse on desktop, your finger on mobile/tablet." : "À la souris sur ordinateur, au doigt sur mobile/tablette."}
       </p>
     </div>
   );
