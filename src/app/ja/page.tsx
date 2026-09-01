@@ -109,10 +109,10 @@ const JLPT_LEVELS = ["N5", "N4", "N3", "N2", "N1"];
 export const metadata: Metadata = {
   title: "Apprendre le japonais",
   description:
-    "Hiragana, katakana, 80 kanji N5, leçons guidées et entraînement à l'entretien en japonais, avec audio et correction intelligente.",
+    "Hiragana, katakana, 66 kanji N5, leçons guidées et entraînement à l'entretien en japonais, avec audio et correction intelligente.",
   alternates: {
     canonical: "/ja",
-    languages: { "fr-FR": "/ja", "en-US": "/en" },
+    languages: { "x-default": "/", "fr-FR": "/ja" },
   },
 };
 

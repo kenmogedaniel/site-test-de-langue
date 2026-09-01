@@ -1,12 +1,17 @@
+import { Suspense } from "react";
 import SiteHeader from "@/components/layout/SiteHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
 
 export default function EnglishSectionLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen">
-      <SiteHeader lang="en" />
+      <Suspense fallback={null}>
+        <SiteHeader lang="en" />
+      </Suspense>
       {children}
-      <SiteFooter lang="en" />
+      <Suspense fallback={null}>
+        <SiteFooter lang="en" />
+      </Suspense>
     </div>
   );
 }

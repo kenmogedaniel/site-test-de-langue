@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { LANGUAGES } from "@/lib/languages";
 import Flag from "@/components/ui/Flag";
 import { t, type InterfaceLang } from "@/lib/uiTranslations";
@@ -10,6 +13,11 @@ export default function SiteFooter({
   lang?: string;
   interfaceLang?: InterfaceLang;
 }) {
+  // La langue d'interface du pied de page suit ?ui=, comme le header.
+  const urlSearchParams = useSearchParams();
+  const effectiveInterfaceLang: InterfaceLang =
+    urlSearchParams.get("ui") === "en" ? "en" : interfaceLang === "en" ? "en" : "fr";
+
   return (
     <footer className="border-t border-sumi/10 bg-white/40 dark:border-washi/10 dark:bg-white/[0.02]">
       <div className="mx-auto max-w-6xl px-6 py-14">
@@ -17,16 +25,16 @@ export default function SiteFooter({
           <div>
             <p className="font-display text-xl">Kadoya</p>
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-sumi/60 dark:text-washi/60">
-              {t("footer.tagline", interfaceLang)}
+              {t("footer.tagline", effectiveInterfaceLang)}
             </p>
             <p className="mt-4 inline-flex items-center gap-2 rounded-full border border-sumi/15 px-3 py-1 text-xs text-sumi/60 dark:border-washi/15 dark:text-washi/60">
-              {t("footer.web", interfaceLang)}
+              {t("footer.web", effectiveInterfaceLang)}
             </p>
           </div>
 
           <div>
             <p className="font-mono text-[10px] uppercase tracking-widest text-sumi/40 dark:text-washi/40">
-              {t("footer.findLang", interfaceLang)}
+              {t("footer.findLang", effectiveInterfaceLang)}
             </p>
             <ul className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
               {LANGUAGES.map((l) => (
@@ -49,34 +57,34 @@ export default function SiteFooter({
 
           <div>
             <p className="font-mono text-[10px] uppercase tracking-widest text-sumi/40 dark:text-washi/40">
-              {t("footer.explore", interfaceLang)}
+              {t("footer.explore", effectiveInterfaceLang)}
             </p>
             <ul className="mt-4 space-y-2 text-sm">
-              <li><Link href="/" className="hover:text-ai dark:hover:text-sakura">{t("footer.allLangs", interfaceLang)}</Link></li>
+              <li><Link href="/" className="hover:text-ai dark:hover:text-sakura">{t("footer.allLangs", effectiveInterfaceLang)}</Link></li>
               {lang === "ja" && (
                 <>
-                  <li><Link href="/ja" className="hover:text-ai dark:hover:text-sakura">{t("footer.learnJa", interfaceLang)}</Link></li>
-                  <li><Link href="/ja/lecons" className="hover:text-ai dark:hover:text-sakura">{t("footer.leconsKana", interfaceLang)}</Link></li>
-                  <li><Link href="/ja/hiragana" className="hover:text-ai dark:hover:text-sakura">{t("footer.trainHiragana", interfaceLang)}</Link></li>
-                  <li><Link href="/ja#guides" className="hover:text-ai dark:hover:text-sakura">{t("footer.guides", interfaceLang)}</Link></li>
+                  <li><Link href="/ja" className="hover:text-ai dark:hover:text-sakura">{t("footer.learnJa", effectiveInterfaceLang)}</Link></li>
+                  <li><Link href="/ja/lecons" className="hover:text-ai dark:hover:text-sakura">{t("footer.leconsKana", effectiveInterfaceLang)}</Link></li>
+                  <li><Link href="/ja/hiragana" className="hover:text-ai dark:hover:text-sakura">{t("footer.trainHiragana", effectiveInterfaceLang)}</Link></li>
+                  <li><Link href="/ja#guides" className="hover:text-ai dark:hover:text-sakura">{t("footer.guides", effectiveInterfaceLang)}</Link></li>
                 </>
               )}
               {lang === "en" && (
                 <>
-                  <li><Link href="/en" className="hover:text-ai dark:hover:text-sakura">{t("footer.learnEn", interfaceLang)}</Link></li>
-                  <li><Link href="/en/lecons" className="hover:text-ai dark:hover:text-sakura">{t("footer.leconsEn", interfaceLang)}</Link></li>
+                  <li><Link href="/en" className="hover:text-ai dark:hover:text-sakura">{t("footer.learnEn", effectiveInterfaceLang)}</Link></li>
+                  <li><Link href="/en/lecons" className="hover:text-ai dark:hover:text-sakura">{t("footer.leconsEn", effectiveInterfaceLang)}</Link></li>
                 </>
               )}
-              <li><Link href="/signup" className="hover:text-ai dark:hover:text-sakura">{t("footer.createAccount", interfaceLang)}</Link></li>
-              <li><Link href="/login" className="hover:text-ai dark:hover:text-sakura">{t("footer.login", interfaceLang)}</Link></li>
+              <li><Link href="/signup" className="hover:text-ai dark:hover:text-sakura">{t("footer.createAccount", effectiveInterfaceLang)}</Link></li>
+              <li><Link href="/login" className="hover:text-ai dark:hover:text-sakura">{t("footer.login", effectiveInterfaceLang)}</Link></li>
             </ul>
           </div>
         </div>
 
         <div className="mt-12 flex flex-col items-start justify-between gap-3 border-t border-sumi/10 pt-6 text-xs text-sumi/40 sm:flex-row sm:items-center dark:border-washi/10 dark:text-washi/40">
-          <p>© {new Date().getFullYear()} Kadoya — {t("footer.rights", interfaceLang)}</p>
+          <p>© {new Date().getFullYear()} Kadoya — {t("footer.rights", effectiveInterfaceLang)}</p>
           <p>
-            {t("footer.motto", interfaceLang)}
+            {t("footer.motto", effectiveInterfaceLang)}
           </p>
         </div>
       </div>

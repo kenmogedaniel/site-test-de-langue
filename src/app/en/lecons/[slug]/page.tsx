@@ -12,10 +12,11 @@ export function generateStaticParams() {
 
 type Params = { params: { slug: string } };
 
-export function generateMetadata({ params }: Params): Metadata {
+export function generateMetadata({ params, searchParams }: Params & { searchParams?: { ui?: string } }): Metadata {
   const lesson = getEnglishLesson(params.slug);
   if (!lesson) return {};
-  return { title: `${lesson.title} — Leçons | Kadoya` };
+  const lang: InterfaceLang = searchParams?.ui === "en" ? "en" : "fr";
+  return { title: `${lang === "en" ? lesson.titleEn : lesson.title} — Lessons | Kadoya` };
 }
 
 export default function EnglishLessonPage({ params, searchParams }: Params & { searchParams?: { ui?: string } }) {
@@ -27,7 +28,7 @@ export default function EnglishLessonPage({ params, searchParams }: Params & { s
   const i = ENGLISH_LESSONS.findIndex((l) => l.slug === lesson.slug);
   const prevSlug = i > 0 ? ENGLISH_LESSONS[i - 1].slug : null;
   const nextSlug = i < ENGLISH_LESSONS.length - 1 ? ENGLISH_LESSONS[i + 1].slug : null;
-  const lessonNumber = `Leçon ${String(lesson.number).padStart(2, "0")}`;
+  const lessonNumber = `${t("en.lessonNumber", lang)} ${String(lesson.number).padStart(2, "0")}`;
 
   return (
     <main className="mx-auto max-w-3xl px-6 pt-12 pb-20">

@@ -31,10 +31,11 @@ function isKanaLesson(lesson: KanaLesson | MinnaLesson): lesson is KanaLesson {
   return "script" in lesson;
 }
 
-export function generateMetadata({ params }: Params): Metadata {
+export function generateMetadata({ params, searchParams }: Params & { searchParams?: { ui?: string } }): Metadata {
   const lesson = getMinnaLesson(params.slug) ?? getKanaLesson(params.slug);
   if (!lesson) return {};
-  return { title: `${lesson.title} — Leçons | Kadoya` };
+  const lang: InterfaceLang = searchParams?.ui === "en" ? "en" : "fr";
+  return { title: `${lang === "en" ? lesson.titleEn : lesson.title} — Lessons | Kadoya` };
 }
 
 export default function LessonPage({ params, searchParams }: Params & { searchParams?: { ui?: string } }) {
@@ -81,7 +82,7 @@ export default function LessonPage({ params, searchParams }: Params & { searchPa
         <Link href={`/ja/lecons${ui}`} className="hover:text-ai">{t("lesson.breadcrumbLecons", lang)}</Link>
         <span>/</span>
         <span className="text-sumi/70 dark:text-washi/70">
-          {isKana ? lesson.groupLabel : `Leçon ${String(lesson.number).padStart(2, "0")}`}
+          {isKana ? lesson.groupLabel : `${t("en.lessonNumber", lang)} ${String(lesson.number).padStart(2, "0")}`}
         </span>
       </nav>
 

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import SiteHeader from "@/components/layout/SiteHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
@@ -12,6 +13,7 @@ import WelcomeCard from "@/components/ui/WelcomeCard";
 import { LANGUAGES } from "@/lib/languages";
 import { ENGLISH_LESSONS } from "@/lib/englishLessons";
 import { MINNA_LESSONS } from "@/lib/minnaLessons";
+import { getLanguageCourse } from "@/lib/languageCourses";
 import { t, type InterfaceLang } from "@/lib/uiTranslations";
 
 const GLYPHS = [
@@ -84,9 +86,17 @@ export default async function LanguagesLandingPage({
     description: t(`${key}.desc`, interfaceLang),
   }));
 
+  const langDesc = (code: string) => {
+    if (code === "ja") return t("langues.desc.ja", interfaceLang);
+    if (code === "en") return t("langues.desc.en", interfaceLang);
+    const course = getLanguageCourse(code);
+    if (course) return interfaceLang === "en" ? course.heroSubtitle.en : course.heroSubtitle.fr;
+    return t("langues.desc.en", interfaceLang);
+  };
+
   return (
     <>
-      <SiteHeader interfaceLang={interfaceLang} />
+      <Suspense fallback={null}><SiteHeader interfaceLang={interfaceLang} /></Suspense>
       <main>
         {/* Hero */}
         <section className="relative overflow-hidden">
@@ -134,7 +144,7 @@ export default async function LanguagesLandingPage({
             </div>
 
             <div className="hidden justify-center lg:flex">
-              <PhoneMockup variant="neutral" />
+              <PhoneMockup variant="neutral" interfaceLang={interfaceLang} />
             </div>
           </div>
         </section>
@@ -157,9 +167,7 @@ export default async function LanguagesLandingPage({
                   <Flag code={lang.flag} country={lang.name} size={28} />
                   <h3 className="mt-4 font-display text-xl">{lang.name}</h3>
                   <p className="mt-2 text-xs leading-relaxed text-sumi/60 dark:text-washi/60">
-                    {lang.code === "ja"
-                      ? t("langues.desc.ja", interfaceLang)
-                      : t("langues.desc.en", interfaceLang)}
+                    {langDesc(lang.code)}
                   </p>
                   <span className="mt-4 inline-block text-xs font-medium text-hanko transition-colors group-hover:text-hanko-light">
                     {t("langues.discover", interfaceLang)}
@@ -227,7 +235,9 @@ export default async function LanguagesLandingPage({
                   >
                     {l.code === "ja"
                       ? t("cta.discoverJa", interfaceLang)
-                      : t("cta.discoverEn", interfaceLang)}
+                      : l.code === "en"
+                        ? t("cta.discoverEn", interfaceLang)
+                        : t("cta.discoverTpl", interfaceLang, { name: getLanguageCourse(l.code)?.name ?? l.name })}
                   </Link>
                 ))}
               </div>
@@ -235,7 +245,7 @@ export default async function LanguagesLandingPage({
           </div>
         </section>
       </main>
-      <SiteFooter interfaceLang={interfaceLang} />
+      <Suspense fallback={null}><SiteFooter interfaceLang={interfaceLang} /></Suspense>
     </>
   );
 }

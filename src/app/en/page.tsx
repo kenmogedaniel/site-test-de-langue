@@ -54,12 +54,12 @@ const FEATURES = [
 ];
 
 export const metadata: Metadata = {
-  title: "Apprendre l'anglais",
+  title: "Learn English",
   description:
-    "Dix leçons d'anglais débutant en pas à pas : vocabulaire, grammaire simple et audio intégré.",
+    "Ten step-by-step beginner English lessons: vocabulary, simple grammar and built-in audio.",
   alternates: {
     canonical: "/en",
-    languages: { "en-US": "/en", "fr-FR": "/ja" },
+    languages: { "x-default": "/", "en-US": "/en" },
   },
 };
 
@@ -76,7 +76,7 @@ export default function EnglishHubPage({
       <section className="relative overflow-hidden">
         <SakuraRoadScene />
         <div className="absolute inset-0 bg-gradient-to-t from-sumi/60 via-sumi/10 to-transparent" />
-        <div className="relative mx-auto flex min-h-[500px] max-w-6xl items-center px-6 pb-14 pt-24">
+        <div className="relative mx-auto flex min-h-[540px] max-w-6xl items-center px-6 pb-14 pt-24">
           <div className="grid w-full items-center gap-12 lg:grid-cols-[1.2fr_auto]">
             <div className="text-washi drop-shadow-sm">
               <div className="flex items-center justify-between">
@@ -108,7 +108,7 @@ export default function EnglishHubPage({
               </div>
             </div>
             <div className="hidden lg:block">
-              <PhoneMockup variant="neutral" />
+              <PhoneMockup variant="neutral" interfaceLang={lang} />
             </div>
           </div>
         </div>
@@ -117,7 +117,7 @@ export default function EnglishHubPage({
       {/* Fonctionnalités */}
       <section id="fonctionnalites" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-20">
         <p className="font-mono text-xs uppercase tracking-widest text-sumi/50 dark:text-washi/50">
-          {t("ja.methodEyebrow", lang)}
+          {t("en.methodEyebrow", lang)}
         </p>
         <h2 className="mt-2 font-display text-3xl">{t("en.methodTitle", lang)}</h2>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-sumi/60 dark:text-washi/60">
@@ -183,11 +183,11 @@ export default function EnglishHubPage({
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <HeroCta
-                dashboardLabel={t("ja.ctaDashboard", lang)}
-                guestLabel={t("ja.ctaCreate", lang)}
+                dashboardLabel={t("shared.ctaDashboard", lang)}
+                guestLabel={t("shared.ctaCreate", lang)}
                 className="inline-flex items-center justify-center rounded-full bg-washi px-7 py-3 text-sm font-medium text-sumi transition-transform hover:scale-[1.03]"
                 guestSecondary={{
-                  label: t("ja.ctaLogin", lang),
+                  label: t("shared.ctaLogin", lang),
                   href: "/login",
                   className:
                     "inline-flex items-center justify-center rounded-full border border-washi/30 px-7 py-3 text-sm font-medium text-washi transition-colors hover:bg-washi/10",

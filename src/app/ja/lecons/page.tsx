@@ -61,7 +61,7 @@ export default function LessonsHubPage({
           </p>
           <LanguageToggle lang={lang} />
         </div>
-        <h1 className="mt-2 font-display text-4xl md:text-5xl">Leçons</h1>
+        <h1 className="mt-2 font-display text-4xl md:text-5xl">{t("nav.lecons", lang)}</h1>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-sumi/60 dark:text-washi/60">
           {t("lecons.intro", lang)}
         </p>

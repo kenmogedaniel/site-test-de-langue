@@ -5,9 +5,9 @@ import { getClientIp, rateLimit, tooManyRequestsResponse } from "@/lib/rateLimit
 const schema = z.object({
   text: z.string().min(1).max(800),
   voice: z.enum(["female", "male"]).optional().default("female"),
-  // Code de langue Google (tl) : "ja" (japonais) ou "en" (anglais). Les autres
-  // langues du site pourront être ajoutées en étendant cette énumération.
-  lang: z.enum(["ja", "en"]).optional().default("ja"),
+  // Code de langue Google (tl) : "ja", "en", "es", "de", "it", "pt", "ko", "ru",
+  // "zh-CN", "ar", "hi", "tr"... Toute valeur reconnue par translate.google.com.
+  lang: z.string().min(2).max(10).optional().default("ja"),
 });
 
 // Googleroute : relais vers le moteur TTS de Google (voix japonaise naturelle) afin

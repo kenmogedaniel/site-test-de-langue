@@ -1,17 +1,50 @@
 import type { VoicePref } from "@/types/database";
 
 /**
- * Synthèse vocale japonaise.
+ * Synthèse vocale multi-langues.
  *
  * Deux stratégies, par ordre de préférence :
  *  1. Moteur TTS de Google relayé par la route serveur `/api/tts` — voix naturelle,
  *     fiable et identique sur toutes les plateformes, y compris Android où la Web
  *     Speech API du navigateur est médiocre (voix robotique, saccades, coupures).
- *     Google ne fournit qu'une seule voix japonaise : pour distinguer Homme/Femme,
- *     on applique un décalage de hauteur (pitch) à la voix féminine de Google.
+ *     Peut servir toutes les langues : on passe à Google son code `tl` (fr, en, es,
+ *     ja, ko, de, it, pt, ru, zh-CN, ar, hi, tr...). Pour distinguer Homme/Femme,
+ *     on applique un décalage de hauteur (pitch) à la voix de Google.
  *  2. Web Speech API (`window.speechSynthesis`) en secours — utilisée hors ligne ou
  *     si le moteur serveur est indisponible ou trop lent.
  */
+
+/** Associe une langue du catalogue ({language.code}) à son jeton Google TTS `tl`. */
+export const GOOGLE_TTS_LANG: Record<string, string> = {
+  ja: "ja",
+  en: "en",
+  ko: "ko",
+  es: "es",
+  de: "de",
+  it: "it",
+  pt: "pt",
+  ru: "ru",
+  cn: "zh-CN",
+  ar: "ar",
+  hi: "hi",
+  tr: "tr",
+};
+
+/** Associe une langue du catalogue à son tag BCP-47 (Web Speech API). */
+export const BCP47_LANG: Record<string, string> = {
+  ja: "ja-JP",
+  en: "en-US",
+  ko: "ko-KR",
+  es: "es-ES",
+  de: "de-DE",
+  it: "it-IT",
+  pt: "pt-PT",
+  ru: "ru-RU",
+  cn: "zh-CN",
+  ar: "ar-SA",
+  hi: "hi-IN",
+  tr: "tr-TR",
+};
 
 const FEMALE_VOICE_HINTS = ["nanami", "ayumi", "haruka", "kyoko", "sayaka", "female", "女性"];
 const MALE_VOICE_HINTS = ["keita", "ichiro", "otoya", "daichi", "male", "男性"];
@@ -163,7 +196,7 @@ function playBlobAudioMale(blob: Blob, rate = 0.9): Promise<void> {
 async function speakViaServer(
   text: string,
   voicePreference: VoicePref,
-  lang: "ja" | "en" = "ja"
+  lang: string = "ja"
 ): Promise<boolean> {
   let controller: AbortController | null = null;
   try {
@@ -304,21 +337,23 @@ async function speakViaWebSpeech(
  * API publique
  * ------------------------------------------------------------------------- */
 
-/** Lit un texte à voix haute dans la langue demandée ("ja" ou "en").
+/** Lit un texte à voix haute dans la langue voulue (code de langue du catalogue :
+ *  "ja", "en", "es", "de", "it"...) ou n'importe quel tag BCP-47.
  *  Utilise le moteur TTS de Google via la route `/api/tts` (bonne qualité, même sur
- *  mobile). La voix « Homme » est obtenue en abaissant la hauteur de la voix féminine
- *  de Google (pitch-shift). Bascule sur la Web Speech API du navigateur si le serveur
- *  est indisponible, trop lent ou hors ligne. */
+ *  mobile). La voix « Homme » est obtenue en abaissant la hauteur de la voix de Google
+ *  (pitch-shift). Bascule sur la Web Speech API du navigateur si le serveur est
+ *  indisponible, trop lent ou hors ligne. */
 export async function speak(
   text: string,
-  lang: "ja" | "en" = "ja",
+  lang: string = "ja",
   voicePreference: VoicePref = "female"
 ): Promise<void> {
   // Annule toute lecture en cours (Web Speech ou Audio serveur) pour éviter les chevauchements.
   window.speechSynthesis?.cancel();
   stopServerAudioNow();
-  const speechLang = lang === "en" ? "en-US" : "ja-JP";
-  const played = await speakViaServer(text, voicePreference, lang);
+  const googleTag = GOOGLE_TTS_LANG[lang] ?? lang;
+  const speechLang = BCP47_LANG[lang] ?? (lang.includes("-") ? lang : `${lang}-${lang.toUpperCase()}`);
+  const played = await speakViaServer(text, voicePreference, googleTag);
   if (!played) {
     await speakViaWebSpeech(text, voicePreference, speechLang);
   }

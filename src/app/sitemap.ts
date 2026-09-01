@@ -3,6 +3,7 @@ import { MINNA_LESSONS } from "@/lib/minnaLessons";
 import { ENGLISH_LESSONS } from "@/lib/englishLessons";
 import { ALL_N5_KANJI } from "@/lib/kanjiData";
 import { ALL_KANA_LESSONS } from "@/lib/kanaLessons";
+import { LANGUAGE_COURSES } from "@/lib/languageCourses";
 
 const BASE_URL = "https://site-test-de-langue.vercel.app";
 
@@ -33,5 +34,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: now,
   }));
 
-  return [...staticRoutes, ...kanaRoutes, ...minnaRoutes, ...englishRoutes, ...kanjiRoutes];
+  const genHubRoutes = Object.values(LANGUAGE_COURSES).map((course) => ({
+    url: `${BASE_URL}/${course.code}`,
+    lastModified: now,
+  }));
+
+  const genLeconsRoutes: MetadataRoute.Sitemap = [];
+  Object.values(LANGUAGE_COURSES).forEach((course) => {
+    genLeconsRoutes.push({ url: `${BASE_URL}/${course.code}/lecons`, lastModified: now });
+    course.lessons.forEach((l) =>
+      genLeconsRoutes.push({ url: `${BASE_URL}/${course.code}/lecons/${l.slug}`, lastModified: now })
+    );
+  });
+
+  return [...staticRoutes, ...kanaRoutes, ...minnaRoutes, ...englishRoutes, ...kanjiRoutes, ...genHubRoutes, ...genLeconsRoutes];
 }

@@ -10,7 +10,7 @@ export default function SpeakButton({
 }: {
   text: string;
   label?: string;
-  lang?: "ja" | "en";
+  lang?: string;
 }) {
   const [playing, setPlaying] = useState(false);
   const [failed, setFailed] = useState(false);

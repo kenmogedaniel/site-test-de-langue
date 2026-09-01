@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { LANGUAGES } from "@/lib/languages";
 import Flag from "@/components/ui/Flag";
@@ -16,6 +17,11 @@ export default function SiteHeader({
   lang?: string;
   interfaceLang?: InterfaceLang;
 }) {
+  // La langue d'interface suit ?ui= sur le chemin courant (bascule FR/EN du chrome).
+  const urlSearchParams = useSearchParams();
+  const effectiveInterfaceLang: InterfaceLang =
+    urlSearchParams.get("ui") === "en" ? "en" : interfaceLang === "en" ? "en" : "fr";
+
   const [langOpen, setLangOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   // Quand `signedIn` n'est pas fourni, l'état de connexion est détecté côté client :
@@ -64,11 +70,11 @@ export default function SiteHeader({
   }, []);
 
   const navLinks = [
-    { href: "/", label: t("nav.langues", interfaceLang) },
-    { href: `/${lang}/lecons`, label: t("nav.lecons", interfaceLang) },
-    { href: `/${lang}#fonctionnalites`, label: t("nav.fonctionnalites", interfaceLang) },
+    { href: "/", label: t("nav.langues", effectiveInterfaceLang) },
+    { href: `/${lang}/lecons`, label: t("nav.lecons", effectiveInterfaceLang) },
+    { href: `/${lang}#fonctionnalites`, label: t("nav.fonctionnalites", effectiveInterfaceLang) },
     ...(lang === "ja"
-      ? [{ href: `/${lang}#guides`, label: t("nav.guides", interfaceLang) }]
+      ? [{ href: `/${lang}#guides`, label: t("nav.guides", effectiveInterfaceLang) }]
       : []),
   ];
 
@@ -84,7 +90,7 @@ export default function SiteHeader({
             </svg>
             Kadoya
             <span className="hidden text-[11px] font-body font-normal uppercase tracking-widest text-sumi/40 dark:text-washi/40 sm:inline">
-              {t("header.tagline", interfaceLang)}
+              {t("header.tagline", effectiveInterfaceLang)}
             </span>
           </span>
         </Link>
@@ -127,7 +133,7 @@ export default function SiteHeader({
             {langOpen && (
               <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-sumi/10 bg-white p-2 shadow-xl dark:border-washi/10 dark:bg-[#1d2026]">
                 <p className="px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-sumi/40 dark:text-washi/40">
-                  {t("header.langueToLearn", interfaceLang)}
+                  {t("header.langueToLearn", effectiveInterfaceLang)}
                 </p>
                 <ul className="max-h-80 overflow-y-auto">
                   {LANGUAGES.map((l) =>
@@ -144,7 +150,7 @@ export default function SiteHeader({
                             <span className="text-sumi/50 dark:text-washi/50">{l.name}</span>
                           </span>
                           <span className="rounded-full bg-ai px-2 py-0.5 text-[10px] font-medium text-washi">
-                            {t("header.actif", interfaceLang)}
+                            {t("header.actif", effectiveInterfaceLang)}
                           </span>
                         </Link>
                       </li>
@@ -152,14 +158,14 @@ export default function SiteHeader({
                       <li key={l.code}>
                         <span
                           className="flex cursor-not-allowed items-center justify-between rounded-xl px-3 py-2 text-sm opacity-45"
-                          title={t("header.bientot", interfaceLang)}
+                          title={t("header.bientot", effectiveInterfaceLang)}
                         >
                           <span className="flex items-center gap-3">
                             <Flag code={l.flag} country={l.name} />
                             <span>{l.native}</span>
                             <span className="text-sumi/50 dark:text-washi/50">{l.name}</span>
                           </span>
-                          <span className="text-[10px] font-mono uppercase tracking-widest">{t("header.bientot", interfaceLang)}</span>
+                          <span className="text-[10px] font-mono uppercase tracking-widest">{t("header.bientot", effectiveInterfaceLang)}</span>
                         </span>
                       </li>
                     )
@@ -171,7 +177,7 @@ export default function SiteHeader({
 
           {effectiveSignedIn ? (
             <Link href="/dashboard" className="btn-primary hidden !px-5 !py-2 text-sm sm:inline-flex">
-              {t("header.monEspace", interfaceLang)}
+              {t("header.monEspace", effectiveInterfaceLang)}
             </Link>
           ) : (
             <>
@@ -179,10 +185,10 @@ export default function SiteHeader({
                 href="/login"
                 className="hidden rounded-full px-3 py-2 text-sm text-sumi/70 transition-colors hover:text-ai dark:text-washi/70 dark:hover:text-sakura sm:inline-block"
               >
-                {t("header.seConnecter", interfaceLang)}
+                {t("header.seConnecter", effectiveInterfaceLang)}
               </Link>
               <Link href="/signup" className="btn-primary hidden !px-5 !py-2 text-sm sm:inline-flex">
-                {t("header.commencer", interfaceLang)}
+                {t("header.commencer", effectiveInterfaceLang)}
               </Link>
             </>
           )}
@@ -192,7 +198,7 @@ export default function SiteHeader({
             className="rounded-full p-2 hover:bg-sumi/5 md:hidden dark:hover:bg-washi/5"
             onClick={() => setMenuOpen((v) => !v)}
             aria-expanded={menuOpen}
-            aria-label={t("header.menu", interfaceLang)}
+            aria-label={t("header.menu", effectiveInterfaceLang)}
           >
             {menuOpen ? (
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="h-5 w-5">
@@ -223,15 +229,15 @@ export default function SiteHeader({
             <hr className="my-2 border-sumi/10 dark:border-washi/10" />
             {effectiveSignedIn ? (
               <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="rounded-xl px-3 py-2.5 hover:bg-sumi/5 dark:hover:bg-washi/5">
-                {t("header.monEspace", interfaceLang)}
+                {t("header.monEspace", effectiveInterfaceLang)}
               </Link>
             ) : (
               <>
                 <Link href="/login" onClick={() => setMenuOpen(false)} className="rounded-xl px-3 py-2.5 hover:bg-sumi/5 dark:hover:bg-washi/5">
-                  {t("header.seConnecter", interfaceLang)}
+                  {t("header.seConnecter", effectiveInterfaceLang)}
                 </Link>
                 <Link href="/signup" onClick={() => setMenuOpen(false)} className="mt-1 rounded-full bg-ai px-3 py-2.5 text-center font-medium text-washi">
-                  {t("header.creerCompte", interfaceLang)}
+                  {t("header.creerCompte", effectiveInterfaceLang)}
                 </Link>
               </>
             )}

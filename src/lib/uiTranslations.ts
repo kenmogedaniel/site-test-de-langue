@@ -110,6 +110,7 @@ export const UI: Record<string, Entry> = {
   "cta.creerCompte": { fr: "Créer un compte gratuit", en: "Create a free account" },
   "cta.discoverJa": { fr: "Découvrir le japonais", en: "Discover Japanese" },
   "cta.discoverEn": { fr: "Découvrir l'anglais", en: "Discover English" },
+  "cta.discoverTpl": { fr: "Découvrir {name}", en: "Discover {name}" },
 
   // Footer
   "footer.tagline": {
@@ -203,8 +204,8 @@ export const UI: Record<string, Entry> = {
     en: "Kana line by line + a structured course in 25 lessons, all with audio.",
   },
   "ja.modules.kanji.desc": {
-    fr: "80 kanji N5 par thème, avec lectures, mots et ordre des traits.",
-    en: "80 N5 kanji by theme, with readings, words and stroke order.",
+    fr: "66 kanji N5 par thème, avec lectures, mots et ordre des traits.",
+    en: "66 N5 kanji by theme, with readings, words and stroke order.",
   },
   "ja.modules.entretien.desc": {
     fr: "95 questions réelles, 3 modes, audio, correction intelligente.",
@@ -272,6 +273,9 @@ export const UI: Record<string, Entry> = {
   "ja.ctaDashboard": { fr: "Retourner à mon espace", en: "Back to my space" },
   "ja.ctaCreate": { fr: "Créer un compte gratuit", en: "Create a free account" },
   "ja.ctaLogin": { fr: "Se connecter", en: "Log in" },
+  "shared.ctaDashboard": { fr: "Retourner à mon espace", en: "Back to my space" },
+  "shared.ctaCreate": { fr: "Créer un compte gratuit", en: "Create a free account" },
+  "shared.ctaLogin": { fr: "Se connecter", en: "Log in" },
 
   // --- Hublot anglais (en/) ---
   "en.heroTitle1": { fr: "Apprenez", en: "Learn" },
@@ -283,6 +287,7 @@ export const UI: Record<string, Entry> = {
   "en.ctaContinue": { fr: "Continuer", en: "Continue" },
   "en.ctaStart": { fr: "Commencer gratuitement", en: "Start for free" },
   "en.seeLessons": { fr: "Voir les leçons", en: "See the lessons" },
+  "en.methodEyebrow": { fr: "La méthode", en: "The method" },
   "en.methodTitle": { fr: "Comment apprendre l'anglais ?", en: "How do you learn English?" },
   "en.methodSubtitle": {
     fr: "Choisissez les sujets qui vous intéressent, la méthode qui vous convient, et laissez la progression faire le reste.",
@@ -410,6 +415,36 @@ export const UI: Record<string, Entry> = {
   "lesson.next": { fr: "Leçon suivante →", en: "Next lesson →" },
   "lesson.backToLessons": { fr: "Retour aux leçons", en: "Back to lessons" },
   "lesson.openLesson": { fr: "Ouvrir la leçon →", en: "Open the lesson →" },
+
+  // --- Hubs de langue génériques (nouvelles langues) ---
+  "lang.allLangs": { fr: "Toutes les langues", en: "All languages" },
+  "lang.methodEyebrow": { fr: "La méthode", en: "The method" },
+  "lang.methodTitle": { fr: "Comment apprendre {name} ?", en: "How do you learn {name}?" },
+  "lang.methodSubtitle": {
+    fr: "Des leçons guidées pas à pas, du vocabulaire essentiel et la prononciation en audio à chaque étape.",
+    en: "Step-by-step guided lessons, essential vocabulary and pronunciation in audio at every step.",
+  },
+  "lang.programTitle": { fr: "Le programme en leçons", en: "The lessons program" },
+  "lang.programSubtitle": {
+    fr: "De la présentation à la vie quotidienne : un parcours débutant cohérent, avec exercices à chaque leçon.",
+    en: "From introductions to everyday life: a coherent beginner path, with exercises in every lesson.",
+  },
+  "lang.lessonNumber": { fr: "Leçon", en: "Lesson" },
+  "lang.open": { fr: "Ouvrir →", en: "Open →" },
+  "lang.seeLessons": { fr: "Voir les leçons", en: "See the lessons" },
+  "lang.ctaContinue": { fr: "Continuer", en: "Continue" },
+  "lang.ctaStart": { fr: "Commencer gratuitement", en: "Start for free" },
+  "lang.ctaFinalTitle": { fr: "Faites fleurir votre {name}", en: "Make your {name} bloom" },
+  "lang.ctaFinalSubtitle": {
+    fr: "Rejoignez les apprenants qui progressent chaque jour, une leçon à la fois.",
+    en: "Join the learners who improve every day, one lesson at a time.",
+  },
+  "lang.exercisesTitle": { fr: "Exercices", en: "Exercises" },
+  "lang.interviewTitle": { fr: "Entraînement à l'entretien", en: "Interview practice" },
+  "lang.grammarTitle": { fr: "Points de grammaire", en: "Grammar points" },
+  "lang.examplesTitle": { fr: "Exemples", en: "Examples" },
+  "lang.vocabTitle": { fr: "Vocabulaire", en: "Vocabulary" },
+  "lang.backToHub": { fr: "Retour aux leçons", en: "Back to lessons" },
 };
 
 /** Renvoie le texte d'interface pour la langue demandée, avec remplacement {tokens}. */
