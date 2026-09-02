@@ -15,7 +15,7 @@ export function generateMetadata({ params, searchParams }: Params & { searchPara
   const lesson = getEnglishLesson(params.slug);
   if (!lesson) return {};
   const lang: InterfaceLang = searchParams?.ui === "en" ? "en" : "fr";
-  return { title: `${lang === "en" ? lesson.titleEn : lesson.title} â€” Lessons | Kadoya` };
+  return { title: `${lang === "en" ? lesson.titleEn : lesson.title} — Lessons | Kadoya` };
 }
 
 export default function EnglishLessonPage({ params, searchParams }: Params & { searchParams?: { ui?: string } }) {
@@ -83,7 +83,7 @@ export default function EnglishLessonPage({ params, searchParams }: Params & { s
                 <div>
                   <p className="font-display text-lg leading-snug">{ex.en}</p>
                   <p className="mt-1.5 text-sm italic text-sumi/70 dark:text-washi/70">
-                    Â« {lang === "en" ? ex.en : ex.fr} Â»
+                    « {lang === "en" ? ex.en : ex.fr} »
                   </p>
                 </div>
               </div>
@@ -110,7 +110,7 @@ export default function EnglishLessonPage({ params, searchParams }: Params & { s
         </div>
       </section>
 
-      {/* Navigation entre leÃ§ons */}
+      {/* Navigation entre leçons */}
       <nav className="mt-12 flex items-stretch justify-between gap-4">
         {prevSlug ? (
           <Link

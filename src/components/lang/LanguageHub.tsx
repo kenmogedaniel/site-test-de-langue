@@ -9,13 +9,13 @@ import { LANGUAGES } from "@/lib/languages";
 import type { LanguageCourse } from "@/lib/genericLessons";
 
 const FEATURES = [
-  { glyph: "å­¦", badgeClass: "bg-ai/10 text-ai", titleKey: "ja.feat.leconsGuidees", descKey: "ja.feat.leconsGuidees.desc" },
-  { glyph: "è©±", badgeClass: "bg-hanko/10 text-hanko", titleKey: "ja.feat.entretien", descKey: "ja.feat.entretien.desc" },
-  { glyph: "éŸ³", badgeClass: "bg-bamboo/10 text-bamboo", titleKey: "ja.feat.audio", descKey: "ja.feat.audio.desc" },
-  { glyph: "é€²", badgeClass: "bg-sakura-deep/15 text-sakura-deep dark:text-sakura", titleKey: "ja.feat.suivi", descKey: "ja.feat.suivi.desc" },
+  { glyph: "学", badgeClass: "bg-ai/10 text-ai", titleKey: "ja.feat.leconsGuidees", descKey: "ja.feat.leconsGuidees.desc" },
+  { glyph: "話", badgeClass: "bg-hanko/10 text-hanko", titleKey: "ja.feat.entretien", descKey: "ja.feat.entretien.desc" },
+  { glyph: "音", badgeClass: "bg-bamboo/10 text-bamboo", titleKey: "ja.feat.audio", descKey: "ja.feat.audio.desc" },
+  { glyph: "進", badgeClass: "bg-sakura-deep/15 text-sakura-deep dark:text-sakura", titleKey: "ja.feat.suivi", descKey: "ja.feat.suivi.desc" },
 ];
 
-/** Page d'accueil gÃ©nÃ©rique d'une langue du catalogue. */
+/** Page d'accueil générique d'une langue du catalogue. */
 export default function LanguageHub({
   course,
   interfaceLang,
@@ -83,7 +83,7 @@ export default function LanguageHub({
           </div>
         </section>
 
-        {/* MÃ©thode */}
+        {/* Méthode */}
         <section id="fonctionnalites" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-20">
           <p className="font-mono text-xs uppercase tracking-widest text-sumi/50 dark:text-washi/50">
             {t("lang.methodEyebrow", lang)}

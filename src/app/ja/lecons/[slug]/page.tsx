@@ -35,7 +35,7 @@ export function generateMetadata({ params, searchParams }: Params & { searchPara
   const lesson = getMinnaLesson(params.slug) ?? getKanaLesson(params.slug);
   if (!lesson) return {};
   const lang: InterfaceLang = searchParams?.ui === "en" ? "en" : "fr";
-  return { title: `${lang === "en" ? lesson.titleEn : lesson.title} â€” Lessons | Kadoya` };
+  return { title: `${lang === "en" ? lesson.titleEn : lesson.title} — Lessons | Kadoya` };
 }
 
 export default function LessonPage({ params, searchParams }: Params & { searchParams?: { ui?: string } }) {
@@ -97,7 +97,7 @@ export default function LessonPage({ params, searchParams }: Params & { searchPa
         )}
       </header>
 
-      {/* Contenu spÃ©cifique */}
+      {/* Contenu spécifique */}
       {isKana ? (
         <>
           <section className="mt-10">
@@ -116,7 +116,7 @@ export default function LessonPage({ params, searchParams }: Params & { searchPa
               ))}
             </div>
             <p className="mt-4 rounded-xl border border-savane/25 bg-savane/5 px-4 py-3 text-xs leading-relaxed text-sumi/70 dark:text-washi/70">
-              ðŸ’¡ {lang === "en" ? lesson.tipEn : lesson.tip}
+              💡 {lang === "en" ? lesson.tipEn : lesson.tip}
             </p>
           </section>
 
@@ -206,7 +206,7 @@ export default function LessonPage({ params, searchParams }: Params & { searchPa
                       <p className="font-display text-lg leading-snug">{ex.jp}</p>
                       <p className="mt-0.5 font-mono text-xs text-sumi/50 dark:text-washi/50">{ex.kana}</p>
                       <p className="mt-1.5 text-sm italic text-sumi/70 dark:text-washi/70">
-                        Â« {lang === "en" ? ex.en : ex.fr} Â»
+                        « {lang === "en" ? ex.en : ex.fr} »
                       </p>
                     </div>
                   </div>
@@ -248,7 +248,7 @@ export default function LessonPage({ params, searchParams }: Params & { searchPa
         </>
       )}
 
-      {/* Navigation entre leÃ§ons */}
+      {/* Navigation entre leçons */}
       <nav className="mt-12 flex items-stretch justify-between gap-4">
         {prevSlug ? (
           <Link

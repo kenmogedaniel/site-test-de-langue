@@ -69,7 +69,7 @@ export default function LessonsHubPage({
       <section id="kana" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-10">
         <div className="flex items-center gap-3">
           <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-sakura/25 font-display text-base text-sakura-deep dark:text-sakura">
-            ä»®å
+            仮名
           </span>
           <h2 className="font-display text-2xl">{t("lecons.kanaTitle", lang)}</h2>
         </div>
@@ -94,12 +94,12 @@ export default function LessonsHubPage({
         </div>
       </section>
 
-      {/* Cours en 25 leÃ§ons */}
+      {/* Cours en 25 leçons */}
       <section id="cours" className="scroll-mt-20 bg-white/40 py-14 dark:bg-white/[0.02]">
         <div className="mx-auto max-w-6xl px-6">
           <div className="flex items-center gap-3">
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-ai/10 font-display text-base text-ai">
-              èª²
+              課
             </span>
             <h2 className="font-display text-2xl">{t("lecons.coursTitle", lang)}</h2>
           </div>

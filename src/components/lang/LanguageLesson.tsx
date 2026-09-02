@@ -7,7 +7,7 @@ import { LangExerciseBlock, InterviewBlock } from "@/components/lang/LangExercis
 import { t, type InterfaceLang } from "@/lib/uiTranslations";
 import { getLessonBySlug, type LanguageCourse } from "@/lib/genericLessons";
 
-/** Page de dÃ©tail d'une leÃ§on d'une langue du catalogue (hors japonais). */
+/** Page de détail d'une leçon d'une langue du catalogue (hors japonais). */
 export function LanguageLessonMetadata(
   course: LanguageCourse,
   slug: string,
@@ -16,7 +16,7 @@ export function LanguageLessonMetadata(
   const lesson = getLessonBySlug(course, slug);
   if (!lesson) return {};
   const lang: InterfaceLang = searchParams?.ui === "en" ? "en" : "fr";
-  return { title: `${lang === "en" ? lesson.titleEn : lesson.title} â€” Lessons | Kadoya` };
+  return { title: `${lang === "en" ? lesson.titleEn : lesson.title} — Lessons | Kadoya` };
 }
 
 export default function LanguageLesson({
@@ -102,7 +102,7 @@ export default function LanguageLesson({
                       <p className="mt-0.5 font-mono text-xs text-sumi/50 dark:text-washi/50">{ex.roman}</p>
                     )}
                     <p className="mt-1.5 text-sm italic text-sumi/70 dark:text-washi/70">
-                      Â« {lang === "en" ? ex.en : ex.fr} Â»
+                      « {lang === "en" ? ex.en : ex.fr} »
                     </p>
                   </div>
                 </div>
@@ -149,7 +149,7 @@ export default function LanguageLesson({
         </section>
       )}
 
-      {/* EntraÃ®nement Ã  l'entretien */}
+      {/* Entraînement à l'entretien */}
       {lesson.interview && lesson.interview.length > 0 && (
         <section className="mt-10">
           <h2 className="text-xs font-semibold uppercase tracking-widest text-sumi/45 dark:text-washi/45">
@@ -161,7 +161,7 @@ export default function LanguageLesson({
         </section>
       )}
 
-      {/* Navigation entre leÃ§ons */}
+      {/* Navigation entre leçons */}
       <nav className="mt-12 flex items-stretch justify-between gap-4">
         {prev ? (
           <Link

@@ -112,7 +112,7 @@ export default function EnglishHubPage({
         </div>
       </section>
 
-      {/* FonctionnalitÃ©s */}
+      {/* Fonctionnalités */}
       <section id="fonctionnalites" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-20">
         <p className="font-mono text-xs uppercase tracking-widest text-sumi/50 dark:text-washi/50">
           {t("en.methodEyebrow", lang)}

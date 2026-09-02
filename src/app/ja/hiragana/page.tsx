@@ -17,7 +17,7 @@ export default function HiraganaPage({
         </Link>
       </div>
       <h1 className="font-display text-4xl mt-6 mb-2">
-        <Ruby kanji="å¹³ä»®å" reading="ã²ã‚‰ãŒãª" />
+        <Ruby kanji="平仮名" reading="ひらがな" />
       </h1>
       <p className="text-sumi/60 dark:text-washi/60 mb-10 leading-relaxed">
         {t("hiragana.intro", lang)}

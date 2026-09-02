@@ -121,7 +121,7 @@ export default async function LanguagesLandingPage({
               <div className="mt-8 flex flex-wrap items-center gap-3">
                 <Link href={`/${activeLangs[0]?.code ?? "ja"}`} className="btn-primary">
                   {t("hero.ctaStart", interfaceLang)}
-                  <span aria-hidden>â†’</span>
+                  <span aria-hidden>→</span>
                 </Link>
                 <HeroCta
                   dashboardLabel={t("hero.ctaDashboard", interfaceLang)}
@@ -147,7 +147,7 @@ export default async function LanguagesLandingPage({
           </div>
         </section>
 
-        {/* SÃ©lection de langue */}
+        {/* Sélection de langue */}
         <section id="langues" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-20">
           <h2 className="font-display text-3xl">{t("langues.title", interfaceLang)}</h2>
           <p className="mt-2 text-sm text-sumi/60 dark:text-washi/60">
@@ -187,7 +187,7 @@ export default async function LanguagesLandingPage({
           </div>
         </section>
 
-        {/* FonctionnalitÃ©s */}
+        {/* Fonctionnalités */}
         <section id="fonctionnalites" className="scroll-mt-20 bg-white/40 py-20 dark:bg-white/[0.02]">
           <div className="mx-auto max-w-6xl px-6">
             <p className="font-mono text-xs uppercase tracking-widest text-sumi/50 dark:text-washi/50">
