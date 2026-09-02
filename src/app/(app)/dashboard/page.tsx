@@ -5,8 +5,18 @@ import Flag from "@/components/ui/Flag";
 import { LANGUAGES } from "@/lib/languages";
 import { lessonTotal, allCourseCodes } from "@/lib/courseTotals";
 import type { Difficulty } from "@/types/database";
+import GamificationPanel from "@/components/gamify/GamificationPanel";
+import GoalSetter from "@/components/gamify/GoalSetter";
+import Heatmap from "@/components/gamify/Heatmap";
+import { levelFromXp, xpForNextLevel, DEFAULT_DAILY_GOAL, streakAtRisk } from "@/lib/gamification";
+import { phraseForLang } from "@/lib/dailyPhrase";
 
 export const dynamic = "force-dynamic";
+
+function todayStr(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 
 const MODES: { key: Difficulty; label: string; kanji: string; reading: string; color: string; hoverColor: string }[] = [  { key: "easy", label: "Facile — QCM", kanji: "易", reading: "やさ", color: "text-savane", hoverColor: "hover:text-savane" },
   { key: "medium", label: "Moyen — réponse libre", kanji: "中", reading: "ちゅう", color: "text-ai", hoverColor: "hover:text-ai" },
@@ -21,19 +31,26 @@ export default async function DashboardPage() {
   const userId = user!.id;
 
   // Première vague : toutes les requêtes indépendantes en parallèle plutôt qu'en séquence.
-  const [{ data: profile }, { data: sessions }, { data: themes }, { count: reviewCount }, { data: lessonProgress }] =
-    await Promise.all([
-      supabase.from("profiles").select("display_name").eq("id", userId).single(),
-      supabase
-        .from("sessions")
-        .select("id, mode, started_at, ended_at")
-        .eq("user_id", userId)
-        .order("started_at", { ascending: false })
-        .limit(5),
-      supabase.from("themes").select("id, name, sort_order").order("sort_order"),
-      supabase.from("review_flags").select("id", { count: "exact", head: true }).eq("user_id", userId),
-      supabase.from("lesson_progress").select("course_code").eq("user_id", userId),
-    ]);
+  const [
+    { data: profile },
+    { data: sessions },
+    { data: themes },
+    { count: reviewCount },
+    { data: lessonProgress },
+    { data: stats },
+  ] = await Promise.all([
+    supabase.from("profiles").select("display_name").eq("id", userId).single(),
+    supabase
+      .from("sessions")
+      .select("id, mode, started_at, ended_at")
+      .eq("user_id", userId)
+      .order("started_at", { ascending: false })
+      .limit(5),
+    supabase.from("themes").select("id, name, sort_order").order("sort_order"),
+    supabase.from("review_flags").select("id", { count: "exact", head: true }).eq("user_id", userId),
+    supabase.from("lesson_progress").select("course_code").eq("user_id", userId),
+    supabase.from("user_stats").select("*").eq("user_id", userId).maybeSingle(),
+  ]);
 
   // Progression par langue : leçons terminées ? nombre total par langue.
   const doneByCode = new Map<string, number>();
@@ -90,6 +107,16 @@ export default async function DashboardPage() {
   }
 
   const allThemes = themes ?? [];
+  const allLessonDone = (lessonProgress ?? []).length;
+  const totalXp = stats?.total_xp ?? 0;
+  const level = levelFromXp(totalXp);
+  const xpNext = xpForNextLevel(level);
+  const goalTotal = stats?.daily_goal ?? DEFAULT_DAILY_GOAL;
+  const goalFresh = stats?.last_goal_date === todayStr();
+  const goalProgress = goalFresh ? (stats?.xp_today ?? 0) : 0;
+  const practiceLang = "ja";
+  const todayPhrase = phraseForLang(practiceLang, todayStr());
+  const activityDates = stats?.activity_dates ?? [];
 
   return (
     <div className="space-y-12">
@@ -106,6 +133,64 @@ export default async function DashboardPage() {
           )}{" "}
           さん
         </h1>
+      </div>
+
+      {streakAtRisk(stats?.last_activity_date ?? null, todayStr()) && stats && (
+        <Link
+          href="/train/easy"
+          className="group flex items-center justify-between gap-4 rounded-2xl border border-hanko/30 bg-hanko/5 px-5 py-4 transition-colors hover:border-hanko/50"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🔥</span>
+            <div>
+              <p className="text-sm font-medium">
+                Votre série de {stats.current_streak} jour{stats.current_streak > 1 ? "s" : ""} est en danger !
+              </p>
+              <p className="text-xs text-sumi/60 dark:text-washi/60">
+                Terminez une leçon aujourd'hui pour la continuer.
+              </p>
+            </div>
+          </div>
+          <span className="text-sm text-hanko underline underline-offset-2 group-hover:no-underline">
+            Continuer →
+          </span>
+        </Link>
+      )}
+
+      <GamificationPanel
+        currentStreak={stats?.current_streak ?? 0}
+        level={level}
+        xp={totalXp}
+        xpForNext={xpNext}
+        goalProgress={goalProgress}
+        goalTotal={goalTotal}
+        badges={stats?.badges ?? []}
+        phrase={todayPhrase}
+      />
+
+      <div className="card-washi rounded-2xl p-5">
+        <GoalSetter current={stats?.daily_goal ?? DEFAULT_DAILY_GOAL} active={!!stats} />
+      </div>
+
+      {activityDates.length > 0 && <Heatmap activityDates={activityDates} />}
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Link href="/diagnostic" className="card-washi group flex items-center justify-between rounded-2xl p-5 hover:border-ai/40 transition-colors">
+          <div>
+            <p className="text-[10px] uppercase tracking-widest text-sumi/45 dark:text-washi/45">⚠️ 60 secondes</p>
+            <p className="font-display text-xl group-hover:text-ai transition-colors">Diagnostic express</p>
+            <p className="text-xs text-sumi/50 dark:text-washi/50">Évaluez vos points forts.</p>
+          </div>
+          <span className="text-2xl">🎯</span>
+        </Link>
+        <Link href="/certificat" className="card-washi group flex items-center justify-between rounded-2xl p-5 hover:border-ai/40 transition-colors">
+          <div>
+            <p className="text-[10px] uppercase tracking-widest text-sumi/45 dark:text-washi/45">Récompense</p>
+            <p className="font-display text-xl group-hover:text-ai transition-colors">Mon certificat</p>
+            <p className="text-xs text-sumi/50 dark:text-washi/50">Attestation en PDF.</p>
+          </div>
+          <span className="text-2xl">📜</span>
+        </Link>
       </div>
 
       {/* Progression par langue */}

@@ -81,6 +81,23 @@ export interface LessonProgress {
   completed_at: string;
 }
 
+export interface UserStats {
+  id: string;
+  user_id: string;
+  current_streak: number;
+  longest_streak: number;
+  last_activity_date: string | null;
+  total_xp: number;
+  level: number;
+  xp_today: number;
+  last_goal_date: string | null;
+  daily_goal: number;
+  badges: string[];
+  activity_dates: string[];
+  created_at: string;
+  updated_at: string;
+}
+
 // Squelette minimal compatible avec le generic Database de @supabase/supabase-js.
 // Peut être remplacé par `supabase gen types typescript` une fois la CLI installée localement.
 // L'intersection avec Record<string, unknown> est nécessaire : supabase-js contraint
@@ -105,6 +122,7 @@ export interface Database {
       session_answers: TableDef<SessionAnswer>;
       review_flags: TableDef<ReviewFlag>;
       lesson_progress: TableDef<LessonProgress>;
+      user_stats: TableDef<UserStats>;
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

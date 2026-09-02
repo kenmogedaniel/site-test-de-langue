@@ -1,6 +1,7 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
+import { recordLessonActivity } from "@/lib/userStatsClient";
 
 /** Marque (ou retire) une leçon comme terminée pour l'utilisateur connecté.
  *  Retourne l'état résultant (true = terminée) ou null si non connecté. */
@@ -20,6 +21,11 @@ export async function setLessonCompleted(
       .from("lesson_progress")
       .upsert({ user_id: user.id, course_code: courseCode, lesson_slug: lessonSlug }, { onConflict: "user_id,course_code,lesson_slug" });
     if (error) throw error;
+    const { count } = await supabase
+      .from("lesson_progress")
+      .select("user_id", { count: "exact", head: true })
+      .eq("user_id", user.id);
+    await recordLessonActivity(user.id, count ?? 0);
     return true;
   }
 
