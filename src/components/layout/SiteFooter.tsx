@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { LANGUAGES } from "@/lib/languages";
 import Flag from "@/components/ui/Flag";
+import { useInterfaceLang } from "@/components/interface/InterfaceLangProvider";
 import { t, type InterfaceLang } from "@/lib/uiTranslations";
 
 export default function SiteFooter({
@@ -13,10 +13,9 @@ export default function SiteFooter({
   lang?: string;
   interfaceLang?: InterfaceLang;
 }) {
-  // La langue d'interface du pied de page suit ?ui=, comme le header.
-  const urlSearchParams = useSearchParams();
-  const effectiveInterfaceLang: InterfaceLang =
-    urlSearchParams.get("ui") === "en" ? "en" : interfaceLang === "en" ? "en" : "fr";
+  // La langue d'interface est une préférence globale (même source que le header).
+  const { interfaceLang: ctxLang } = useInterfaceLang();
+  const effectiveInterfaceLang: InterfaceLang = ctxLang ?? interfaceLang;
 
   return (
     <footer className="border-t border-sumi/10 bg-white/40 dark:border-washi/10 dark:bg-white/[0.02]">

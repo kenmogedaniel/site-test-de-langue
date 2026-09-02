@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import SiteHeader from "@/components/layout/SiteHeader";
@@ -7,7 +7,6 @@ import SakuraScene from "@/components/ui/SakuraScene";
 import PhoneMockup from "@/components/ui/PhoneMockup";
 import FeatureCard from "@/components/ui/FeatureCard";
 import Flag from "@/components/ui/Flag";
-import LanguageToggle from "@/components/ui/LanguageToggle";
 import HeroCta from "@/components/ui/HeroCta";
 import WelcomeCard from "@/components/ui/WelcomeCard";
 import { LANGUAGES } from "@/lib/languages";
@@ -107,7 +106,6 @@ export default async function LanguagesLandingPage({
                 <p className="font-mono text-xs uppercase tracking-widest text-sumi/50 dark:text-washi/50">
                   {t("hero.eyebrow", interfaceLang)}
                 </p>
-                <LanguageToggle lang={interfaceLang} />
               </div>
 
               <WelcomeCard interfaceLang={interfaceLang} />
@@ -123,7 +121,7 @@ export default async function LanguagesLandingPage({
               <div className="mt-8 flex flex-wrap items-center gap-3">
                 <Link href={`/${activeLangs[0]?.code ?? "ja"}`} className="btn-primary">
                   {t("hero.ctaStart", interfaceLang)}
-                  <span aria-hidden>→</span>
+                  <span aria-hidden>â†’</span>
                 </Link>
                 <HeroCta
                   dashboardLabel={t("hero.ctaDashboard", interfaceLang)}
@@ -149,7 +147,7 @@ export default async function LanguagesLandingPage({
           </div>
         </section>
 
-        {/* Sélection de langue */}
+        {/* SÃ©lection de langue */}
         <section id="langues" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-20">
           <h2 className="font-display text-3xl">{t("langues.title", interfaceLang)}</h2>
           <p className="mt-2 text-sm text-sumi/60 dark:text-washi/60">
@@ -189,7 +187,7 @@ export default async function LanguagesLandingPage({
           </div>
         </section>
 
-        {/* Fonctionnalités */}
+        {/* FonctionnalitÃ©s */}
         <section id="fonctionnalites" className="scroll-mt-20 bg-white/40 py-20 dark:bg-white/[0.02]">
           <div className="mx-auto max-w-6xl px-6">
             <p className="font-mono text-xs uppercase tracking-widest text-sumi/50 dark:text-washi/50">

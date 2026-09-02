@@ -1,11 +1,10 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import type { Metadata } from "next";
 import SakuraRoadScene from "@/components/ui/SakuraRoadScene";
 import PhoneMockup from "@/components/ui/PhoneMockup";
 import FeatureCard from "@/components/ui/FeatureCard";
 import HeroCta from "@/components/ui/HeroCta";
 import Ruby from "@/components/ui/Ruby";
-import LanguageToggle from "@/components/ui/LanguageToggle";
 import { t, type InterfaceLang } from "@/lib/uiTranslations";
 
 interface Module {
@@ -19,37 +18,37 @@ interface Module {
 
 const FEATURES = [
   {
-    glyph: "学",
+    glyph: "å­¦",
     badgeClass: "bg-ai/10 text-ai",
     titleKey: "ja.feat.leconsGuidees",
     descKey: "ja.feat.leconsGuidees.desc",
   },
   {
-    glyph: "対",
+    glyph: "å¯¾",
     badgeClass: "bg-hanko/10 text-hanko",
     titleKey: "ja.feat.entretien",
     descKey: "ja.feat.entretien.desc",
   },
   {
-    glyph: "智",
+    glyph: "æ™º",
     badgeClass: "bg-savane/10 text-savane",
     titleKey: "ja.feat.correction",
     descKey: "ja.feat.correction.desc",
   },
   {
-    glyph: "音",
+    glyph: "éŸ³",
     badgeClass: "bg-bamboo/10 text-bamboo",
     titleKey: "ja.feat.audio",
     descKey: "ja.feat.audio.desc",
   },
   {
-    glyph: "進",
+    glyph: "é€²",
     badgeClass: "bg-sakura-deep/15 text-sakura-deep dark:text-sakura",
     titleKey: "ja.feat.suivi",
     descKey: "ja.feat.suivi.desc",
   },
   {
-    glyph: "認",
+    glyph: "èª",
     badgeClass: "bg-ai/10 text-ai",
     titleKey: "ja.feat.certification",
     descKey: "ja.feat.certification.desc",
@@ -58,7 +57,7 @@ const FEATURES = [
 
 const GUIDES = [
   {
-    kanji: "平仮名",
+    kanji: "å¹³ä»®å",
     gradient: "from-sakura/70 to-hanko/40",
     categoryKey: "ja.guide.hiragana.cat",
     titleKey: "ja.guide.hiragana.title",
@@ -67,7 +66,7 @@ const GUIDES = [
     live: true,
   },
   {
-    kanji: "面接",
+    kanji: "é¢æŽ¥",
     gradient: "from-ai/25 to-ai-dark/15",
     categoryKey: "ja.guide.entretien.cat",
     titleKey: "ja.guide.entretien.title",
@@ -76,7 +75,7 @@ const GUIDES = [
     live: true,
   },
   {
-    kanji: "試験",
+    kanji: "è©¦é¨“",
     gradient: "from-bamboo/30 to-bamboo/10",
     categoryKey: "ja.guide.ljpt.cat",
     titleKey: "ja.guide.jlpt.title",
@@ -99,7 +98,7 @@ const TESTIMONIALS = [
   },
   {
     quoteKey: "ja.t3.quote",
-    name: "Léa T.",
+    name: "LÃ©a T.",
     ctxKey: "ja.t3.ctx",
   },
 ];
@@ -109,7 +108,7 @@ const JLPT_LEVELS = ["N5", "N4", "N3", "N2", "N1"];
 export const metadata: Metadata = {
   title: "Apprendre le japonais",
   description:
-    "Hiragana, katakana, 66 kanji N5, leçons guidées et entraînement à l'entretien en japonais, avec audio et correction intelligente.",
+    "Hiragana, katakana, 66 kanji N5, leÃ§ons guidÃ©es et entraÃ®nement Ã  l'entretien en japonais, avec audio et correction intelligente.",
   alternates: {
     canonical: "/ja",
     languages: { "x-default": "/", "fr-FR": "/ja" },
@@ -125,48 +124,48 @@ export default function JapaneseHubPage({
 
   const modules: Module[] = [
     {
-      kanji: "平仮名",
-      reading: "ひらがな",
+      kanji: "å¹³ä»®å",
+      reading: "ã²ã‚‰ãŒãª",
       titleKey: "ja.modules.hiragana.title",
       descriptionKey: "ja.modules.hiragana.desc",
       href: "/ja/hiragana",
       status: "live",
     },
     {
-      kanji: "片仮名",
-      reading: "かたかな",
+      kanji: "ç‰‡ä»®å",
+      reading: "ã‹ãŸã‹ãª",
       titleKey: "ja.modules.katakana.title",
       descriptionKey: "ja.modules.katakana.desc",
       href: "/ja/lecons/katakana-a",
       status: "live",
     },
     {
-      kanji: "授業",
-      reading: "じゅぎょう",
+      kanji: "æŽˆæ¥­",
+      reading: "ã˜ã‚…ãŽã‚‡ã†",
       titleKey: "ja.modules.lecons.title",
       descriptionKey: "ja.modules.lecons.desc",
       href: "/ja/lecons",
       status: "live",
     },
     {
-      kanji: "漢字",
-      reading: "かんじ",
+      kanji: "æ¼¢å­—",
+      reading: "ã‹ã‚“ã˜",
       titleKey: "ja.modules.kanji.title",
       descriptionKey: "ja.modules.kanji.desc",
       href: "/ja/kanji",
       status: "live",
     },
     {
-      kanji: "面接",
-      reading: "めんせつ",
+      kanji: "é¢æŽ¥",
+      reading: "ã‚ã‚“ã›ã¤",
       titleKey: "ja.modules.entretien.title",
       descriptionKey: "ja.modules.entretien.desc",
       href: "/dashboard",
       status: "live",
     },
     {
-      kanji: "試験",
-      reading: "しけん",
+      kanji: "è©¦é¨“",
+      reading: "ã—ã‘ã‚“",
       titleKey: "ja.modules.jlpt.title",
       descriptionKey: "ja.modules.jlpt.desc",
       status: "soon",
@@ -189,7 +188,6 @@ export default function JapaneseHubPage({
                 >
                   {t("ja.allLangs", lang)}
                 </Link>
-                <LanguageToggle lang={lang} dark />
               </div>
               <h1 className="mt-4 font-display text-6xl leading-[1.05] tracking-tight md:text-7xl">
                 {t("ja.heroTitle1", lang)}
@@ -220,7 +218,7 @@ export default function JapaneseHubPage({
         </div>
       </section>
 
-      {/* Fonctionnalités */}
+      {/* FonctionnalitÃ©s */}
       <section id="fonctionnalites" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-20">
         <p className="font-mono text-xs uppercase tracking-widest text-sumi/50 dark:text-washi/50">
           {t("ja.methodEyebrow", lang)}
@@ -362,7 +360,7 @@ export default function JapaneseHubPage({
         </div>
       </section>
 
-      {/* Témoignages */}
+      {/* TÃ©moignages */}
       <section className="mx-auto max-w-6xl px-6 py-20">
         <h2 className="font-display text-3xl">{t("ja.testimonialsTitle", lang)}</h2>
         <div className="mt-8 grid gap-5 md:grid-cols-3">
@@ -370,11 +368,11 @@ export default function JapaneseHubPage({
             <figure key={x.name} className="card-washi relative p-7">
               {i === 1 && (
                 <span className="absolute -top-4 right-5 scale-[0.62]" aria-hidden>
-                  <span className="hanko-stamp !h-[88px] !w-[88px]">合格</span>
+                  <span className="hanko-stamp !h-[88px] !w-[88px]">åˆæ ¼</span>
                 </span>
               )}
               <blockquote className="text-sm leading-relaxed">
-                «&nbsp;{t(x.quoteKey, lang)}&nbsp;»
+                Â«&nbsp;{t(x.quoteKey, lang)}&nbsp;Â»
               </blockquote>
               <figcaption className="mt-4 flex items-center gap-3">
                 <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sakura/30 font-display text-sm text-sakura-deep dark:text-sakura">
@@ -394,7 +392,7 @@ export default function JapaneseHubPage({
       <section className="mx-auto max-w-6xl px-6 pb-24">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-ai to-ai-dark px-8 py-16 text-center text-washi">
           <span className="pointer-events-none absolute -bottom-10 left-1/2 -translate-x-1/2 select-none font-display text-[12rem] leading-none opacity-10" aria-hidden>
-            桜
+            æ¡œ
           </span>
           <div className="relative">
             <h2 className="font-display text-3xl md:text-4xl">

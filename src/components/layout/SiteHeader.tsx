@@ -1,26 +1,38 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { LANGUAGES } from "@/lib/languages";
 import Flag from "@/components/ui/Flag";
 import { createClient } from "@/lib/supabase/client";
+import { useInterfaceLang } from "@/components/interface/InterfaceLangProvider";
 import { t, type InterfaceLang } from "@/lib/uiTranslations";
+
+// Langues correspondant à une route "/:code" de section (hors langues sans page).
+const SECTION_CODES = ["ja", "en", "ko", "es", "de", "it", "pt", "ru", "cn", "ar", "hi", "tr"];
 
 export default function SiteHeader({
   signedIn,
   lang = "ja",
-  interfaceLang = "fr",
+  interfaceLang: interfaceLangProp = "fr",
 }: {
   signedIn?: boolean;
   lang?: string;
   interfaceLang?: InterfaceLang;
 }) {
-  // La langue d'interface suit ?ui= sur le chemin courant (bascule FR/EN du chrome).
-  const urlSearchParams = useSearchParams();
-  const effectiveInterfaceLang: InterfaceLang =
-    urlSearchParams.get("ui") === "en" ? "en" : interfaceLang === "en" ? "en" : "fr";
+  // La langue apprise (affichée + liens de navigation) provient du chemin courant :
+  // « /espagnol/… » -> espagnol, « /japonais/… » -> japonais, sinon défaut « ja ».
+  const pathname = usePathname();
+  const activeLang =
+    LANGUAGES.find((l) => l.code === SECTION_CODES.find((c) => pathname.startsWith(`/${c}`))) ??
+    LANGUAGES.find((l) => l.code === lang) ??
+    LANGUAGES.find((l) => l.active)!;
+
+  // La langue d'interface FR/EN est une préférence globale (contexte + stockage local).
+  const { interfaceLang } = useInterfaceLang();
+  const effectiveInterfaceLang: InterfaceLang = interfaceLang ?? interfaceLangProp;
+  const ui = `?ui=${effectiveInterfaceLang}`;
 
   const [langOpen, setLangOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -47,8 +59,6 @@ export default function SiteHeader({
 
   const effectiveSignedIn = signedIn !== undefined ? signedIn : (clientSignedIn ?? false);
 
-  const activeLang = LANGUAGES.find((l) => l.code === lang) ?? LANGUAGES.find((l) => l.active)!;
-
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
       if (langRef.current && !langRef.current.contains(e.target as Node)) {
@@ -71,10 +81,10 @@ export default function SiteHeader({
 
   const navLinks = [
     { href: "/", label: t("nav.langues", effectiveInterfaceLang) },
-    { href: `/${lang}/lecons`, label: t("nav.lecons", effectiveInterfaceLang) },
-    { href: `/${lang}#fonctionnalites`, label: t("nav.fonctionnalites", effectiveInterfaceLang) },
-    ...(lang === "ja"
-      ? [{ href: `/${lang}#guides`, label: t("nav.guides", effectiveInterfaceLang) }]
+    { href: `/${activeLang.code}/lecons${ui}`, label: t("nav.lecons", effectiveInterfaceLang) },
+    { href: `/${activeLang.code}${ui}#fonctionnalites`, label: t("nav.fonctionnalites", effectiveInterfaceLang) },
+    ...(activeLang.code === "ja"
+      ? [{ href: `/${activeLang.code}${ui}#guides`, label: t("nav.guides", effectiveInterfaceLang) }]
       : []),
   ];
 
@@ -175,6 +185,18 @@ export default function SiteHeader({
             )}
           </div>
 
+          <Link
+            href="/settings"
+            aria-label={t("settings.title", effectiveInterfaceLang)}
+            title={t("settings.title", effectiveInterfaceLang)}
+            className="hidden rounded-full p-2 text-sumi/60 transition-colors hover:bg-sumi/5 hover:text-ai dark:text-washi/60 dark:hover:bg-washi/5 sm:inline-flex"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            </svg>
+          </Link>
+
           {effectiveSignedIn ? (
             <Link href="/dashboard" className="btn-primary hidden !px-5 !py-2 text-sm sm:inline-flex">
               {t("header.monEspace", effectiveInterfaceLang)}
@@ -227,6 +249,9 @@ export default function SiteHeader({
               </Link>
             ))}
             <hr className="my-2 border-sumi/10 dark:border-washi/10" />
+            <Link href="/settings" onClick={() => setMenuOpen(false)} className="rounded-xl px-3 py-2.5 hover:bg-sumi/5 dark:hover:bg-washi/5">
+              {t("settings.title", effectiveInterfaceLang)}
+            </Link>
             {effectiveSignedIn ? (
               <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="rounded-xl px-3 py-2.5 hover:bg-sumi/5 dark:hover:bg-washi/5">
                 {t("header.monEspace", effectiveInterfaceLang)}

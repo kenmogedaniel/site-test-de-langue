@@ -11,7 +11,7 @@ export default async function SettingsPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("voice_preference, theme_pref")
+    .select("voice_preference, theme_pref, interface_lang")
     .eq("id", user!.id)
     .single();
 
@@ -22,6 +22,7 @@ export default async function SettingsPage() {
         userId={user!.id}
         initialVoice={profile?.voice_preference ?? "female"}
         initialTheme={profile?.theme_pref ?? "light"}
+        initialInterfaceLang={profile?.interface_lang ?? "fr"}
       />
     </div>
   );

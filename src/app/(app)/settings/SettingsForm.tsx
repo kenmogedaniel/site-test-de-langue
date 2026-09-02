@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { speakJapanese, ensureVoicesLoaded, hasDistinctJapaneseVoices } from "@/lib/tts";
-import type { VoicePref, ThemePref } from "@/types/database";
+import { useInterfaceLang } from "@/components/interface/InterfaceLangProvider";
+import type { VoicePref, ThemePref, InterfaceLangPref } from "@/types/database";
 
 const PREVIEW_TEXT = "こんにちは、よろしくおねがいします。";
 
@@ -11,16 +12,25 @@ export default function SettingsForm({
   userId,
   initialVoice,
   initialTheme,
+  initialInterfaceLang,
 }: {
   userId: string;
   initialVoice: VoicePref;
   initialTheme: ThemePref;
+  initialInterfaceLang: InterfaceLangPref;
 }) {
+  const { interfaceLang, setInterfaceLang } = useInterfaceLang();
   const [voice, setVoice] = useState<VoicePref>(initialVoice);
   const [theme, setTheme] = useState<ThemePref>(initialTheme);
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [previewing, setPreviewing] = useState(false);
   const [singleVoiceOnly, setSingleVoiceOnly] = useState(false);
+
+  // La langue d'interface sauvegardée dans le profil prime sur celle du navigateur.
+  useEffect(() => {
+    setInterfaceLang(initialInterfaceLang);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Applique le thème clair/sombre dès le montage (au cas où il vient d'être changé ailleurs).
   useEffect(() => {
@@ -72,6 +82,26 @@ export default function SettingsForm({
 
   return (
     <div className="space-y-8 max-w-md">
+      <div>
+        <p className="text-sm font-medium mb-3">Langue de l'interface</p>
+        <div className="flex gap-3">
+          {(["fr", "en"] as InterfaceLangPref[]).map((l) => (
+            <button
+              key={l}
+              onClick={() => setInterfaceLang(l)}
+              className={`px-5 py-2.5 rounded-full border text-sm transition-colors ${
+                interfaceLang === l ? "border-ai bg-ai/5 text-ai" : "border-sumi/15 dark:border-washi/15"
+              }`}
+            >
+              {l === "fr" ? "Français" : "English"}
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-sumi/45 dark:text-washi/45 mt-2">
+          Appliqué à tout le site dès la sélection.
+        </p>
+      </div>
+
       <div>
         <p className="text-sm font-medium mb-3">Voix japonaise</p>
         <div className="flex items-center gap-3">

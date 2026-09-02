@@ -1,12 +1,14 @@
 export type Difficulty = "easy" | "medium" | "hard";
 export type VoicePref = "male" | "female";
 export type ThemePref = "light" | "dark";
+export type InterfaceLangPref = "fr" | "en";
 
 export interface Profile {
   id: string;
   display_name: string | null;
   voice_preference: VoicePref;
   theme_pref: ThemePref;
+  interface_lang: InterfaceLangPref;
   created_at: string;
 }
 
@@ -70,6 +72,14 @@ export interface ReviewFlag {
   created_at: string;
 }
 
+export interface LessonProgress {
+  id: string;
+  user_id: string;
+  course_code: string;
+  lesson_slug: string;
+  completed_at: string;
+}
+
 // Squelette minimal compatible avec le generic Database de @supabase/supabase-js.
 // Peut être remplacé par `supabase gen types typescript` une fois la CLI installée localement.
 // L'intersection avec Record<string, unknown> est nécessaire : supabase-js contraint
@@ -93,6 +103,7 @@ export interface Database {
       sessions: TableDef<Session>;
       session_answers: TableDef<SessionAnswer>;
       review_flags: TableDef<ReviewFlag>;
+      lesson_progress: TableDef<LessonProgress>;
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import Ruby from "@/components/ui/Ruby";
+import Flag from "@/components/ui/Flag";
+import { LANGUAGES } from "@/lib/languages";
+import { lessonTotal, allCourseCodes } from "@/lib/courseTotals";
 import type { Difficulty } from "@/types/database";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +21,7 @@ export default async function DashboardPage() {
   const userId = user!.id;
 
   // Première vague : toutes les requêtes indépendantes en parallèle plutôt qu'en séquence.
-  const [{ data: profile }, { data: sessions }, { data: themes }, { count: reviewCount }] =
+  const [{ data: profile }, { data: sessions }, { data: themes }, { count: reviewCount }, { data: lessonProgress }] =
     await Promise.all([
       supabase.from("profiles").select("display_name").eq("id", userId).single(),
       supabase
@@ -29,7 +32,26 @@ export default async function DashboardPage() {
         .limit(5),
       supabase.from("themes").select("id, name, sort_order").order("sort_order"),
       supabase.from("review_flags").select("id", { count: "exact", head: true }).eq("user_id", userId),
+      supabase.from("lesson_progress").select("course_code").eq("user_id", userId),
     ]);
+
+  // Progression par langue : leçons terminées ? nombre total par langue.
+  const doneByCode = new Map<string, number>();
+  (lessonProgress ?? []).forEach((lp) => {
+    doneByCode.set(lp.course_code, (doneByCode.get(lp.course_code) ?? 0) + 1);
+  });
+  const langProgress = allCourseCodes()
+    .map((code) => {
+      const meta = LANGUAGES.find((l) => l.code === code);
+      return {
+        code,
+        name: meta?.name ?? code,
+        flag: meta?.flag ?? code,
+        done: doneByCode.get(code) ?? 0,
+        total: lessonTotal(code),
+      };
+    })
+    .filter((p) => p.total > 0);
 
   const sessionIds = (sessions ?? []).map((s) => s.id);
 
@@ -86,6 +108,37 @@ export default async function DashboardPage() {
         </h1>
       </div>
 
+      {/* Progression par langue */}
+      <div>
+        <h2 className="font-display text-2xl mb-4">Ma progression par langue</h2>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {langProgress.map((p) => {
+            const pct = p.total > 0 ? Math.round((p.done / p.total) * 100) : 0;
+            return (
+              <Link
+                key={p.code}
+                href={`/${p.code}/lecons`}
+                className="card-washi group flex flex-col p-4 transition-colors hover:border-ai/40"
+              >
+                <div className="flex items-center gap-2">
+                  <Flag code={p.flag} country={p.name} size={18} />
+                  <span className="text-sm font-medium group-hover:text-ai transition-colors">{p.name}</span>
+                  <span className="ml-auto font-mono text-xs text-sumi/50 dark:text-washi/50">
+                    {p.done}/{p.total}
+                  </span>
+                </div>
+                <div className="mt-3 h-1.5 bg-sumi/10 dark:bg-washi/10 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full ${pct >= 100 ? "bg-bamboo" : pct >= 40 ? "bg-savane" : "bg-hanko"}`}
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Stats rapides */}
       <div className="grid grid-cols-3 gap-3 sm:gap-4">
         <div className="card-washi p-4 sm:p-6">
@@ -104,7 +157,12 @@ export default async function DashboardPage() {
 
       {/* Modes */}
       <div>
-        <h2 className="font-display text-2xl mb-4">Choisissez un mode</h2>
+        <div className="flex items-center gap-3 mb-4">
+          <h2 className="font-display text-2xl">Entraînement à l'entretien — japonais</h2>
+          <Link href="/ja" className="text-xs text-ai underline underline-offset-2 hover:text-ai-dark">
+            Voir la section japonaise →
+          </Link>
+        </div>
         <div className="grid md:grid-cols-3 gap-4">
           {MODES.map((m) => (
             <Link
@@ -124,7 +182,7 @@ export default async function DashboardPage() {
       {/* Filtre par thème */}
       {allThemes.length > 0 && (
         <div>
-          <h2 className="font-display text-2xl mb-1">S'entraîner sur un thème précis</h2>
+          <h2 className="font-display text-2xl mb-1">Thèmes d'entretien (japonais)</h2>
           <p className="text-sm text-sumi/50 dark:text-washi/50 mb-4">
             Choisissez un thème et un niveau pour ne travailler que ces questions.
           </p>

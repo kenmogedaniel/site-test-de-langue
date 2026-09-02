@@ -18,6 +18,12 @@ export const UI: Record<string, Entry> = {
   "header.seConnecter": { fr: "Se connecter", en: "Log in" },
   "header.commencer": { fr: "Commencer", en: "Start" },
   "header.creerCompte": { fr: "Créer un compte gratuit", en: "Create a free account" },
+  "settings.title": { fr: "Paramètres", en: "Settings" },
+  "app.dashboard": { fr: "Tableau de bord", en: "Dashboard" },
+  "app.history": { fr: "Historique", en: "History" },
+  "app.backLangs": { fr: "Toutes les langues", en: "All languages" },
+  "lesson.done": { fr: "Terminée", en: "Done" },
+  "lesson.markDone": { fr: "Marquer comme terminée", en: "Mark as completed" },
   "header.menu": { fr: "Menu", en: "Menu" },
 
   // Hero landing

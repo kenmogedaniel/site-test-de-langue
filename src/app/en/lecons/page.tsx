@@ -1,6 +1,5 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { ENGLISH_LESSONS } from "@/lib/englishLessons";
-import LanguageToggle from "@/components/ui/LanguageToggle";
 import { t, type InterfaceLang } from "@/lib/uiTranslations";
 
 export default function EnglishLessonsHubPage({
@@ -18,7 +17,6 @@ export default function EnglishLessonsHubPage({
           <p className="font-mono text-xs uppercase tracking-widest text-sumi/50 dark:text-washi/50">
             {t("lecons.eyebrow", lang)}
           </p>
-          <LanguageToggle lang={lang} />
         </div>
         <h1 className="mt-2 font-display text-4xl md:text-5xl">{t("enlec.title", lang)}</h1>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-sumi/60 dark:text-washi/60">

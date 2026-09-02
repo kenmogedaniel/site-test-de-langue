@@ -1,6 +1,5 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { N5_KANJI_GROUPS } from "@/lib/kanjiData";
-import LanguageToggle from "@/components/ui/LanguageToggle";
 import { t, type InterfaceLang } from "@/lib/uiTranslations";
 
 export default function KanjiHubPage({
@@ -18,7 +17,6 @@ export default function KanjiHubPage({
           <p className="font-mono text-xs uppercase tracking-widest text-sumi/50 dark:text-washi/50">
             {t("kanji.eyebrow", lang)}
           </p>
-          <LanguageToggle lang={lang} />
         </div>
         <h1 className="mt-2 font-display text-4xl md:text-5xl">Kanji</h1>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-sumi/60 dark:text-washi/60">

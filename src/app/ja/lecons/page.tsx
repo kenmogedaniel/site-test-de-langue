@@ -1,7 +1,6 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { HIRAGANA_LESSONS, KATAKANA_LESSONS } from "@/lib/kanaLessons";
 import { MINNA_LESSONS } from "@/lib/minnaLessons";
-import LanguageToggle from "@/components/ui/LanguageToggle";
 import { t, type InterfaceLang } from "@/lib/uiTranslations";
 
 function KanaTrackCard({
@@ -59,7 +58,6 @@ export default function LessonsHubPage({
           <p className="font-mono text-xs uppercase tracking-widest text-sumi/50 dark:text-washi/50">
             {t("lecons.eyebrow", lang)}
           </p>
-          <LanguageToggle lang={lang} />
         </div>
         <h1 className="mt-2 font-display text-4xl md:text-5xl">{t("nav.lecons", lang)}</h1>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-sumi/60 dark:text-washi/60">
@@ -71,7 +69,7 @@ export default function LessonsHubPage({
       <section id="kana" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-10">
         <div className="flex items-center gap-3">
           <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-sakura/25 font-display text-base text-sakura-deep dark:text-sakura">
-            仮名
+            ä»®å
           </span>
           <h2 className="font-display text-2xl">{t("lecons.kanaTitle", lang)}</h2>
         </div>
@@ -96,12 +94,12 @@ export default function LessonsHubPage({
         </div>
       </section>
 
-      {/* Cours en 25 leçons */}
+      {/* Cours en 25 leÃ§ons */}
       <section id="cours" className="scroll-mt-20 bg-white/40 py-14 dark:bg-white/[0.02]">
         <div className="mx-auto max-w-6xl px-6">
           <div className="flex items-center gap-3">
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-ai/10 font-display text-base text-ai">
-              課
+              èª²
             </span>
             <h2 className="font-display text-2xl">{t("lecons.coursTitle", lang)}</h2>
           </div>

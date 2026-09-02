@@ -1,10 +1,10 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import SpeakButton from "@/components/training/SpeakButton";
 import ExerciseBlock from "@/components/training/ExerciseBlock";
 import KanaStrokeSection from "@/components/training/KanaStrokeSection";
-import LanguageToggle from "@/components/ui/LanguageToggle";
+import LessonCompleteButton from "@/components/lang/LessonCompleteButton";
 import { MINNA_DIALOGUES, MINNA_EXERCISES } from "@/lib/minnaExtras";
 import {
   MINNA_LESSONS,
@@ -35,7 +35,7 @@ export function generateMetadata({ params, searchParams }: Params & { searchPara
   const lesson = getMinnaLesson(params.slug) ?? getKanaLesson(params.slug);
   if (!lesson) return {};
   const lang: InterfaceLang = searchParams?.ui === "en" ? "en" : "fr";
-  return { title: `${lang === "en" ? lesson.titleEn : lesson.title} — Lessons | Kadoya` };
+  return { title: `${lang === "en" ? lesson.titleEn : lesson.title} â€” Lessons | Kadoya` };
 }
 
 export default function LessonPage({ params, searchParams }: Params & { searchParams?: { ui?: string } }) {
@@ -73,7 +73,6 @@ export default function LessonPage({ params, searchParams }: Params & { searchPa
 
   return (
     <main className="mx-auto max-w-3xl px-6 pt-12 pb-20">
-      <LanguageToggle lang={lang} />
 
       {/* Fil d'ariane */}
       <nav className="flex items-center gap-2 font-mono text-xs text-sumi/45 dark:text-washi/45">
@@ -87,7 +86,10 @@ export default function LessonPage({ params, searchParams }: Params & { searchPa
       </nav>
 
       <header className="mt-5">
-        <h1 className="font-display text-3xl md:text-4xl">{title}</h1>
+        <div className="flex items-start justify-between gap-4">
+          <h1 className="font-display text-3xl md:text-4xl">{title}</h1>
+          <LessonCompleteButton courseCode="ja" lessonSlug={lesson.slug} interfaceLang={lang} />
+        </div>
         {"summary" in lesson && (
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-sumi/60 dark:text-washi/60">
             {lang === "en" ? lesson.summaryEn : lesson.summary}
@@ -95,7 +97,7 @@ export default function LessonPage({ params, searchParams }: Params & { searchPa
         )}
       </header>
 
-      {/* Contenu spécifique */}
+      {/* Contenu spÃ©cifique */}
       {isKana ? (
         <>
           <section className="mt-10">
@@ -114,7 +116,7 @@ export default function LessonPage({ params, searchParams }: Params & { searchPa
               ))}
             </div>
             <p className="mt-4 rounded-xl border border-savane/25 bg-savane/5 px-4 py-3 text-xs leading-relaxed text-sumi/70 dark:text-washi/70">
-              💡 {lang === "en" ? lesson.tipEn : lesson.tip}
+              ðŸ’¡ {lang === "en" ? lesson.tipEn : lesson.tip}
             </p>
           </section>
 
@@ -204,7 +206,7 @@ export default function LessonPage({ params, searchParams }: Params & { searchPa
                       <p className="font-display text-lg leading-snug">{ex.jp}</p>
                       <p className="mt-0.5 font-mono text-xs text-sumi/50 dark:text-washi/50">{ex.kana}</p>
                       <p className="mt-1.5 text-sm italic text-sumi/70 dark:text-washi/70">
-                        « {lang === "en" ? ex.en : ex.fr} »
+                        Â« {lang === "en" ? ex.en : ex.fr} Â»
                       </p>
                     </div>
                   </div>
@@ -246,7 +248,7 @@ export default function LessonPage({ params, searchParams }: Params & { searchPa
         </>
       )}
 
-      {/* Navigation entre leçons */}
+      {/* Navigation entre leÃ§ons */}
       <nav className="mt-12 flex items-stretch justify-between gap-4">
         {prevSlug ? (
           <Link

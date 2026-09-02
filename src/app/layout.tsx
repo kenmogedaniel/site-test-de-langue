@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/react";
+import { InterfaceLangProvider } from "@/components/interface/InterfaceLangProvider";
 import "./globals.css";
 
 const shippori = localFont({
@@ -74,7 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <body className="font-body bg-washi dark:bg-washi-dark text-sumi dark:text-washi antialiased min-h-screen">
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        {children}
+        <InterfaceLangProvider>{children}</InterfaceLangProvider>
         <Analytics />
       </body>
     </html>

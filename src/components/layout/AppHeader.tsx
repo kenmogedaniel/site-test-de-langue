@@ -4,16 +4,19 @@ import Link from "next/link";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import SignOutButton from "@/components/ui/SignOutButton";
-
-const NAV = [
-  { href: "/dashboard", label: "Tableau de bord" },
-  { href: "/history", label: "Historique" },
-  { href: "/settings", label: "Réglages" },
-];
+import { useInterfaceLang } from "@/components/interface/InterfaceLangProvider";
+import { t } from "@/lib/uiTranslations";
 
 export default function AppHeader() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const { interfaceLang } = useInterfaceLang();
+
+  const NAV = [
+    { href: "/dashboard", label: t("app.dashboard", interfaceLang) },
+    { href: "/history", label: t("app.history", interfaceLang) },
+    { href: "/settings", label: t("settings.title", interfaceLang) },
+  ];
 
   function close() {
     setOpen(false);
@@ -26,9 +29,9 @@ export default function AppHeader() {
           <Link
             href="/ja"
             className="hidden shrink-0 text-xs text-sumi/40 dark:text-washi/40 hover:text-ai sm:inline transition-colors"
-            title="Retour au hub japonais"
+            title={t("app.backLangs", interfaceLang)}
           >
-            ← 日本語
+            ← {t("header.tagline", interfaceLang)}
           </Link>
           <Link href="/dashboard" className="shrink-0 font-display text-xl">
             Kadoya
@@ -80,7 +83,7 @@ export default function AppHeader() {
               onClick={close}
               className="rounded-lg px-3 py-2.5 text-xs text-sumi/60 hover:bg-sumi/5 dark:text-washi/60 dark:hover:bg-washi/5"
             >
-              ← Retour au hub japonais
+              ← {t("app.backLangs", interfaceLang)}
             </Link>
             {NAV.map((item) => (
               <Link

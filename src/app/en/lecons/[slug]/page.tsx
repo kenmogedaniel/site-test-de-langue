@@ -1,8 +1,7 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import SpeakButton from "@/components/training/SpeakButton";
-import LanguageToggle from "@/components/ui/LanguageToggle";
 import { ENGLISH_LESSONS, getEnglishLesson } from "@/lib/englishLessons";
 import { t, type InterfaceLang } from "@/lib/uiTranslations";
 
@@ -16,7 +15,7 @@ export function generateMetadata({ params, searchParams }: Params & { searchPara
   const lesson = getEnglishLesson(params.slug);
   if (!lesson) return {};
   const lang: InterfaceLang = searchParams?.ui === "en" ? "en" : "fr";
-  return { title: `${lang === "en" ? lesson.titleEn : lesson.title} — Lessons | Kadoya` };
+  return { title: `${lang === "en" ? lesson.titleEn : lesson.title} â€” Lessons | Kadoya` };
 }
 
 export default function EnglishLessonPage({ params, searchParams }: Params & { searchParams?: { ui?: string } }) {
@@ -32,7 +31,6 @@ export default function EnglishLessonPage({ params, searchParams }: Params & { s
 
   return (
     <main className="mx-auto max-w-3xl px-6 pt-12 pb-20">
-      <LanguageToggle lang={lang} />
 
       {/* Fil d'ariane */}
       <nav className="flex items-center gap-2 font-mono text-xs text-sumi/45 dark:text-washi/45">
@@ -85,7 +83,7 @@ export default function EnglishLessonPage({ params, searchParams }: Params & { s
                 <div>
                   <p className="font-display text-lg leading-snug">{ex.en}</p>
                   <p className="mt-1.5 text-sm italic text-sumi/70 dark:text-washi/70">
-                    « {lang === "en" ? ex.en : ex.fr} »
+                    Â« {lang === "en" ? ex.en : ex.fr} Â»
                   </p>
                 </div>
               </div>
@@ -112,7 +110,7 @@ export default function EnglishLessonPage({ params, searchParams }: Params & { s
         </div>
       </section>
 
-      {/* Navigation entre leçons */}
+      {/* Navigation entre leÃ§ons */}
       <nav className="mt-12 flex items-stretch justify-between gap-4">
         {prevSlug ? (
           <Link

@@ -1,22 +1,21 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import type { Metadata } from "next";
 import PhoneMockup from "@/components/ui/PhoneMockup";
 import FeatureCard from "@/components/ui/FeatureCard";
 import HeroCta from "@/components/ui/HeroCta";
-import LanguageToggle from "@/components/ui/LanguageToggle";
 import Flag from "@/components/ui/Flag";
 import { t, type InterfaceLang } from "@/lib/uiTranslations";
 import { LANGUAGES } from "@/lib/languages";
 import type { LanguageCourse } from "@/lib/genericLessons";
 
 const FEATURES = [
-  { glyph: "学", badgeClass: "bg-ai/10 text-ai", titleKey: "ja.feat.leconsGuidees", descKey: "ja.feat.leconsGuidees.desc" },
-  { glyph: "話", badgeClass: "bg-hanko/10 text-hanko", titleKey: "ja.feat.entretien", descKey: "ja.feat.entretien.desc" },
-  { glyph: "音", badgeClass: "bg-bamboo/10 text-bamboo", titleKey: "ja.feat.audio", descKey: "ja.feat.audio.desc" },
-  { glyph: "進", badgeClass: "bg-sakura-deep/15 text-sakura-deep dark:text-sakura", titleKey: "ja.feat.suivi", descKey: "ja.feat.suivi.desc" },
+  { glyph: "å­¦", badgeClass: "bg-ai/10 text-ai", titleKey: "ja.feat.leconsGuidees", descKey: "ja.feat.leconsGuidees.desc" },
+  { glyph: "è©±", badgeClass: "bg-hanko/10 text-hanko", titleKey: "ja.feat.entretien", descKey: "ja.feat.entretien.desc" },
+  { glyph: "éŸ³", badgeClass: "bg-bamboo/10 text-bamboo", titleKey: "ja.feat.audio", descKey: "ja.feat.audio.desc" },
+  { glyph: "é€²", badgeClass: "bg-sakura-deep/15 text-sakura-deep dark:text-sakura", titleKey: "ja.feat.suivi", descKey: "ja.feat.suivi.desc" },
 ];
 
-/** Page d'accueil générique d'une langue du catalogue. */
+/** Page d'accueil gÃ©nÃ©rique d'une langue du catalogue. */
 export default function LanguageHub({
   course,
   interfaceLang,
@@ -48,7 +47,6 @@ export default function LanguageHub({
                   <Link href="/" className="font-mono text-xs text-sumi/60 hover:text-ai dark:text-washi/60">
                     {t("lang.allLangs", lang)}
                   </Link>
-                  <LanguageToggle lang={lang} />
                 </div>
                 <div className="mt-4 flex items-center gap-3">
                   <Flag code={flagCode} country={course.name} size={40} />
@@ -85,7 +83,7 @@ export default function LanguageHub({
           </div>
         </section>
 
-        {/* Méthode */}
+        {/* MÃ©thode */}
         <section id="fonctionnalites" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-20">
           <p className="font-mono text-xs uppercase tracking-widest text-sumi/50 dark:text-washi/50">
             {t("lang.methodEyebrow", lang)}

@@ -1,10 +1,9 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ALL_N5_KANJI, getKanji, getKanjiGroup } from "@/lib/kanjiData";
 import SpeakButton from "@/components/training/SpeakButton";
 import DrawingCanvas from "@/components/training/DrawingCanvas";
-import LanguageToggle from "@/components/ui/LanguageToggle";
 import { t, type InterfaceLang } from "@/lib/uiTranslations";
 
 export function generateStaticParams() {
@@ -16,7 +15,7 @@ type Params = { params: { slug: string } };
 export function generateMetadata({ params }: Params): Metadata {
   const kanji = getKanji(params.slug);
   if (!kanji) return {};
-  return { title: `${kanji.kanji} — Kanji | Kadoya` };
+  return { title: `${kanji.kanji} â€” Kanji | Kadoya` };
 }
 
 export default function KanjiDetailPage({ params, searchParams }: Params & { searchParams?: { ui?: string } }) {
@@ -40,7 +39,6 @@ export default function KanjiDetailPage({ params, searchParams }: Params & { sea
         <Link href={`/ja/kanji${ui}`} className="hover:text-ai">Kanji</Link>
         <span>/</span>
         <span className="text-sumi/70 dark:text-washi/70">{kanji.kanji}</span>
-        <span className="ml-auto"><LanguageToggle lang={lang} /></span>
       </nav>
 
       {/* Grande carte du kanji */}
@@ -75,7 +73,7 @@ export default function KanjiDetailPage({ params, searchParams }: Params & { sea
                   <span key={r} className="rounded-full bg-savane/10 px-2.5 py-0.5 text-sm text-savane">{r}</span>
                 ))}
                 {kanji.kunReading.filter(Boolean).length === 0 && (
-                  <span className="text-xs text-sumi/40 dark:text-washi/40">—</span>
+                  <span className="text-xs text-sumi/40 dark:text-washi/40">â€”</span>
                 )}
               </div>
             </div>
@@ -83,7 +81,7 @@ export default function KanjiDetailPage({ params, searchParams }: Params & { sea
         </div>
       </div>
 
-      {/* Mnémonique */}
+      {/* MnÃ©monique */}
       <div className="card-washi mt-8 border-l-4 border-l-savane/40 p-5">
         <p className="text-[10px] uppercase tracking-widest text-savane">{t("kanji.mnemonic", lang)}</p>
         <p className="mt-1.5 text-sm leading-relaxed text-sumi/75 dark:text-washi/75">
@@ -135,7 +133,7 @@ export default function KanjiDetailPage({ params, searchParams }: Params & { sea
         </div>
       </section>
 
-      {/* Entraînement au tracé */}
+      {/* EntraÃ®nement au tracÃ© */}
       <section className="mt-10">
         <h2 className="text-xs font-semibold uppercase tracking-widest text-sumi/45 dark:text-washi/45">
           {t("kanji.practiceTitle", lang, { kanji: kanji.kanji })}
@@ -149,14 +147,14 @@ export default function KanjiDetailPage({ params, searchParams }: Params & { sea
       <nav className="mt-12 flex items-stretch justify-between gap-4">
         {prev ? (
           <Link href={`/ja/kanji/${prev.slug}${ui}`} className="btn-secondary flex-1 !items-start text-left text-xs">
-            ← {prev.kanji} {lang === "en" ? prev.enMeaning : prev.frMeaning}
+            â† {prev.kanji} {lang === "en" ? prev.enMeaning : prev.frMeaning}
           </Link>
         ) : (
           <span className="flex-1" />
         )}
         {next ? (
           <Link href={`/ja/kanji/${next.slug}${ui}`} className="btn-primary flex-1 !items-start text-left text-xs">
-            {next.kanji} {lang === "en" ? next.enMeaning : next.frMeaning} →
+            {next.kanji} {lang === "en" ? next.enMeaning : next.frMeaning} â†’
           </Link>
         ) : (
           <Link href={`/ja/kanji${ui}`} className="btn-primary flex-1 !items-start text-left text-xs">

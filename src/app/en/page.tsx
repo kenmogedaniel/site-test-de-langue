@@ -1,10 +1,9 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import type { Metadata } from "next";
 import SakuraRoadScene from "@/components/ui/SakuraRoadScene";
 import PhoneMockup from "@/components/ui/PhoneMockup";
 import FeatureCard from "@/components/ui/FeatureCard";
 import HeroCta from "@/components/ui/HeroCta";
-import LanguageToggle from "@/components/ui/LanguageToggle";
 import { ENGLISH_LESSONS } from "@/lib/englishLessons";
 import { t, type InterfaceLang } from "@/lib/uiTranslations";
 
@@ -83,7 +82,6 @@ export default function EnglishHubPage({
                 <Link href="/" className="font-mono text-xs text-washi/80 transition-colors hover:text-washi">
                   {t("ja.allLangs", lang)}
                 </Link>
-                <LanguageToggle lang={lang} dark />
               </div>
               <h1 className="mt-4 font-display text-6xl leading-[1.05] tracking-tight md:text-7xl">
                 {t("en.heroTitle1", lang)}
@@ -114,7 +112,7 @@ export default function EnglishHubPage({
         </div>
       </section>
 
-      {/* Fonctionnalités */}
+      {/* FonctionnalitÃ©s */}
       <section id="fonctionnalites" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-20">
         <p className="font-mono text-xs uppercase tracking-widest text-sumi/50 dark:text-washi/50">
           {t("en.methodEyebrow", lang)}

@@ -1,5 +1,4 @@
 ﻿import Link from "next/link";
-import LanguageToggle from "@/components/ui/LanguageToggle";
 import { getLanguageCourse } from "@/lib/languageCourses";
 import { t, type InterfaceLang } from "@/lib/uiTranslations";
 
@@ -15,7 +14,6 @@ export default function ItalianLessonsHubPage({ searchParams }: { searchParams?:
           <p className="font-mono text-xs uppercase tracking-widest text-sumi/50 dark:text-washi/50">
             {t("lecons.eyebrow", lang)}
           </p>
-          <LanguageToggle lang={lang} />
         </div>
         <h1 className="mt-2 font-display text-4xl md:text-5xl">{course.name}</h1>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-sumi/60 dark:text-washi/60">
