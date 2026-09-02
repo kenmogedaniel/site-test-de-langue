@@ -6,7 +6,7 @@ import Link from "next/link";
 import AudioPlayer from "@/components/training/AudioPlayer";
 import HankoFeedback from "@/components/training/HankoFeedback";
 import { useSpeechRecognition } from "@/lib/useSpeechRecognition";
-import type { Difficulty, VoicePref } from "@/types/database";
+import type { Difficulty } from "@/types/database";
 
 interface QuestionData {
   id: string;
@@ -28,7 +28,6 @@ export default function TrainingClient({
   mode,
   timed,
   sessionId,
-  voicePreference,
   questions,
   totalQuestionCount,
   answeredCount,
@@ -37,7 +36,6 @@ export default function TrainingClient({
   mode: Difficulty;
   timed: boolean;
   sessionId: string;
-  voicePreference: VoicePref;
   questions: QuestionData[];
   totalQuestionCount: number;
   answeredCount: number;
@@ -245,7 +243,7 @@ export default function TrainingClient({
 
         <p className="font-display text-2xl leading-relaxed mb-6">{current.text_kana}</p>
 
-        <AudioPlayer text={current.text_kana} voicePreference={voicePreference} autoPlay />
+        <AudioPlayer text={current.text_kana} autoPlay />
 
         <div className="mt-4">
           <button

@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import SettingsForm from "./SettingsForm";
+import type { VoicePref } from "@/types/database";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,7 @@ export default async function SettingsPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("voice_preference, theme_pref, interface_lang")
+    .select("voice_prefs, theme_pref, interface_lang")
     .eq("id", user!.id)
     .single();
 
@@ -20,9 +21,9 @@ export default async function SettingsPage() {
       <h1 className="font-display text-3xl mb-8">Réglages</h1>
       <SettingsForm
         userId={user!.id}
-        initialVoice={profile?.voice_preference ?? "female"}
         initialTheme={profile?.theme_pref ?? "light"}
         initialInterfaceLang={profile?.interface_lang ?? "fr"}
+        initialVoicePrefs={(profile?.voice_prefs ?? {}) as Record<string, VoicePref>}
       />
     </div>
   );

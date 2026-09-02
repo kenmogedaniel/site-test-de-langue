@@ -7,6 +7,7 @@ export interface Profile {
   id: string;
   display_name: string | null;
   voice_preference: VoicePref;
+  voice_prefs: Record<string, VoicePref>;
   theme_pref: ThemePref;
   interface_lang: InterfaceLangPref;
   created_at: string;

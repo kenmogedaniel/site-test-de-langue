@@ -2,17 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { speakJapanese, ensureVoicesLoaded, stopServerAudio } from "@/lib/tts";
-import type { VoicePref } from "@/types/database";
+import { useVoicePrefs } from "@/components/interface/VoicePrefsProvider";
 
 export default function AudioPlayer({
   text,
-  voicePreference = "female",
   autoPlay = false,
 }: {
   text: string;
-  voicePreference?: VoicePref;
   autoPlay?: boolean;
 }) {
+  const { voiceFor } = useVoicePrefs();
+  const voicePreference = voiceFor("ja");
   const [playing, setPlaying] = useState(false);
   const [unsupported, setUnsupported] = useState(false);
 

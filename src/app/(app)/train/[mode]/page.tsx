@@ -61,9 +61,8 @@ export default async function TrainPage({
     ? activeSessionQuery.eq("theme_filter", themeId)
     : activeSessionQuery.is("theme_filter", null);
 
-  const [{ data: profile }, { data: questions }, { data: themes }, { data: activeSession }] =
+  const [{ data: questions }, { data: themes }, { data: activeSession }] =
     await Promise.all([
-      supabase.from("profiles").select("voice_preference").eq("id", userId).single(),
       questionQuery,
       supabase.from("themes").select("id, name"),
       activeSessionQuery.maybeSingle(),
@@ -164,7 +163,6 @@ export default async function TrainPage({
       mode={mode}
       timed={timed}
       sessionId={session.id}
-      voicePreference={profile?.voice_preference ?? "female"}
       totalQuestionCount={orderedIds.length}
       answeredCount={answeredIds.size}
       priorCorrect={priorCorrect}

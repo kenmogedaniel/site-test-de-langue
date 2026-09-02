@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { speak } from "@/lib/tts";
+import { useVoicePrefs } from "@/components/interface/VoicePrefsProvider";
 
 export default function SpeakButton({
   text,
@@ -12,13 +13,14 @@ export default function SpeakButton({
   label?: string;
   lang?: string;
 }) {
+  const { voiceFor } = useVoicePrefs();
   const [playing, setPlaying] = useState(false);
   const [failed, setFailed] = useState(false);
 
   async function handlePlay() {
     setPlaying(true);
     try {
-      await speak(text, lang);
+      await speak(text, lang, voiceFor(lang));
     } catch {
       setFailed(true);
     } finally {

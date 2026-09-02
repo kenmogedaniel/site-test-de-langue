@@ -2,33 +2,55 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { speakJapanese, ensureVoicesLoaded, hasDistinctJapaneseVoices } from "@/lib/tts";
+import { speak } from "@/lib/tts";
 import { useInterfaceLang } from "@/components/interface/InterfaceLangProvider";
+import { useVoicePrefs } from "@/components/interface/VoicePrefsProvider";
+import { LANGUAGES } from "@/lib/languages";
 import type { VoicePref, ThemePref, InterfaceLangPref } from "@/types/database";
 
-const PREVIEW_TEXT = "こんにちは、よろしくおねがいします。";
+const SAMPLES: Record<string, string> = {
+  ja: "こんにちは、よろしくおねがいします。",
+  en: "Hello, nice to meet you.",
+  ko: "안녕하세요, 만나서 반갑습니다.",
+  es: "Hola, encantado de conocerte.",
+  de: "Hallo, ich freue mich, Sie kennenzulernen.",
+  it: "Ciao, piacere di conoscerti.",
+  pt: "Olá, prazer em conhecer você.",
+  ru: "Здравствуйте, приятно познакомиться.",
+  cn: "你好，很高兴认识你。",
+  ar: "مرحباً، سعيد بلقائك.",
+  hi: "नमस्ते, आपसे मिलकर खुशी हुई।",
+  tr: "Merhaba, tanıştığımıza memnun oldum.",
+};
 
 export default function SettingsForm({
   userId,
-  initialVoice,
   initialTheme,
   initialInterfaceLang,
+  initialVoicePrefs,
 }: {
   userId: string;
-  initialVoice: VoicePref;
   initialTheme: ThemePref;
   initialInterfaceLang: InterfaceLangPref;
+  initialVoicePrefs: Record<string, VoicePref>;
 }) {
   const { interfaceLang, setInterfaceLang } = useInterfaceLang();
-  const [voice, setVoice] = useState<VoicePref>(initialVoice);
+  const { voiceFor, setVoiceFor } = useVoicePrefs();
   const [theme, setTheme] = useState<ThemePref>(initialTheme);
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
-  const [previewing, setPreviewing] = useState(false);
-  const [singleVoiceOnly, setSingleVoiceOnly] = useState(false);
+  const [previewing, setPreviewing] = useState<string | null>(null);
 
   // La langue d'interface sauvegardée dans le profil prime sur celle du navigateur.
   useEffect(() => {
     setInterfaceLang(initialInterfaceLang);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Rejoue les préférences de voix par langue stockées dans le profil (sans réécrire).
+  useEffect(() => {
+    for (const [code, pref] of Object.entries(initialVoicePrefs)) {
+      setVoiceFor(code, pref);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -44,44 +66,37 @@ export default function SettingsForm({
     document.cookie = `theme=${next};path=/;max-age=${maxAge};samesite=Lax`;
   }
 
-  useEffect(() => {
-    ensureVoicesLoaded().then((voices) => setSingleVoiceOnly(!hasDistinctJapaneseVoices(voices)));
-  }, []);
-
-  async function persist(next: { voice_preference?: VoicePref; theme_pref?: ThemePref }) {
+  async function persistTheme(t: ThemePref) {
     setStatus("saving");
     const supabase = createClient();
-    const { error } = await supabase.from("profiles").update(next).eq("id", userId);
+    const { error } = await supabase.from("profiles").update({ theme_pref: t }).eq("id", userId);
     setStatus(error ? "idle" : "saved");
     if (!error) setTimeout(() => setStatus("idle"), 1500);
-  }
-
-  // Les deux réglages s'appliquent instantanément (visuellement / au prochain audio)
-  // et sont enregistrés en base immédiatement, sans bouton "Enregistrer" à cliquer.
-  function handleVoiceChange(v: VoicePref) {
-    setVoice(v);
-    persist({ voice_preference: v });
   }
 
   function handleThemeChange(t: ThemePref) {
     setTheme(t);
     applyTheme(t);
-    persist({ theme_pref: t });
+    persistTheme(t);
   }
 
-  async function handlePreview() {
-    setPreviewing(true);
+  function handleVoiceChange(code: string, v: VoicePref) {
+    setVoiceFor(code, v);
+  }
+
+  async function handlePreview(code: string, text: string) {
+    setPreviewing(code);
     try {
-      await speakJapanese(PREVIEW_TEXT, voice);
+      await speak(text, code, voiceFor(code));
     } catch {
       // silencieux : le bouton audio de l'entraînement affiche déjà le message d'erreur pertinent.
     } finally {
-      setPreviewing(false);
+      setPreviewing(null);
     }
   }
 
   return (
-    <div className="space-y-8 max-w-md">
+    <div className="space-y-10 max-w-xl">
       <div>
         <p className="text-sm font-medium mb-3">Langue de l'interface</p>
         <div className="flex gap-3">
@@ -103,34 +118,45 @@ export default function SettingsForm({
       </div>
 
       <div>
-        <p className="text-sm font-medium mb-3">Voix japonaise</p>
-        <div className="flex items-center gap-3">
-          {(["female", "male"] as VoicePref[]).map((v) => (
-            <button
-              key={v}
-              onClick={() => handleVoiceChange(v)}
-              className={`px-5 py-2.5 rounded-full border text-sm transition-colors ${
-                voice === v ? "border-ai bg-ai/5 text-ai" : "border-sumi/15 dark:border-washi/15"
-              }`}
-            >
-              {v === "female" ? "Femme" : "Homme"}
-            </button>
-          ))}
-          <button
-            onClick={handlePreview}
-            disabled={previewing}
-            className="text-sm text-ai underline underline-offset-2 disabled:opacity-50"
-          >
-            {previewing ? "Lecture…" : "▶ Écouter"}
-          </button>
+        <p className="text-sm font-medium mb-1">Voix par langue</p>
+        <p className="text-xs text-sumi/45 dark:text-washi/45 mb-4">
+          Choisissez une voix féminine ou masculine pour chaque langue. Le réglage
+          s'applique instantanément à la lecture audio de cette langue.
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {LANGUAGES.map((lang) => {
+            const current = voiceFor(lang.code);
+            const previewText = SAMPLES[lang.code] ?? SAMPLES.ja;
+            return (
+              <div key={lang.code} className="rounded-xl border border-sumi/10 dark:border-washi/10 p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-sm font-medium">{lang.name}</span>
+                  <span className="text-xs text-sumi/40 dark:text-washi/40">{lang.native}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {(["female", "male"] as VoicePref[]).map((v) => (
+                    <button
+                      key={v}
+                      onClick={() => handleVoiceChange(lang.code, v)}
+                      className={`px-4 py-1.5 rounded-full border text-xs transition-colors ${
+                        current === v ? "border-ai bg-ai/5 text-ai" : "border-sumi/15 dark:border-washi/15"
+                      }`}
+                    >
+                      {v === "female" ? "Femme" : "Homme"}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => handlePreview(lang.code, previewText)}
+                    disabled={previewing === lang.code}
+                    className="ml-auto text-xs text-ai underline underline-offset-2 disabled:opacity-50"
+                  >
+                    {previewing === lang.code ? "Lecture…" : "▶ Écouter"}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
-        {singleVoiceOnly && (
-          <p className="text-xs text-sumi/50 dark:text-washi/50 mt-3">
-            La voix « Homme » est produite en abaissant la hauteur de la voix féminine :
-            la différence reste nettement audible même sur des appareils ne disposant
-            que d'une seule voix japonaise.
-          </p>
-        )}
       </div>
 
       <div>
