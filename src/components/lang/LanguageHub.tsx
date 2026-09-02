@@ -6,6 +6,7 @@ import HeroCta from "@/components/ui/HeroCta";
 import LanguageToggle from "@/components/ui/LanguageToggle";
 import Flag from "@/components/ui/Flag";
 import { t, type InterfaceLang } from "@/lib/uiTranslations";
+import { LANGUAGES } from "@/lib/languages";
 import type { LanguageCourse } from "@/lib/genericLessons";
 
 const FEATURES = [
@@ -25,6 +26,7 @@ export default function LanguageHub({
 }) {
   const lang = interfaceLang;
   const ui = `?ui=${lang}`;
+  const flagCode = LANGUAGES.find((l) => l.code === course.code)?.flag ?? course.code;
   const meta: Metadata = {
     title: course.name,
     alternates: {
@@ -49,7 +51,7 @@ export default function LanguageHub({
                   <LanguageToggle lang={lang} />
                 </div>
                 <div className="mt-4 flex items-center gap-3">
-                  <Flag code={course.code === "cn" ? "cn" : course.code} country={course.name} size={40} />
+                  <Flag code={flagCode} country={course.name} size={40} />
                   <span className="font-mono text-xs uppercase tracking-widest text-sumi/50 dark:text-washi/50">
                     {course.native}
                   </span>
